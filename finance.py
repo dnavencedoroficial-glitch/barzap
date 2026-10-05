@@ -189,7 +189,9 @@ def register_finance(app,access,require,data):
         if sum(p['amount_cents'] for p in clean)!=snap['total_cents']:abort(400,description='Os pagamentos precisam somar exatamente o total da comanda.')
         snap.update(payments=clean,bar=g.db.get(Bar,bar_id).name,closed_at=stamp())
         receipt=Receipt(id=str(uuid.uuid4()),bar_id=bar_id,cash_id=cash.id,table_id=t.id,session_no=t.session_no,snapshot=snap,closed_at=snap['closed_at'])
-        g.db.add(receipt);t.opened=False;g.db.commit()
+        # Keep the table available for the next customer in a fresh session.
+        # The receipt retains the old session and its complete snapshot.
+        g.db.add(receipt);t.opened=True;t.session_no+=1;t.opened_at=stamp();g.db.commit()
         return jsonify(receipt={'id':receipt.id,**snap}),201
 
     @app.post('/api/bars/<bar_id>/cash/close')

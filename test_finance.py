@@ -28,7 +28,9 @@ class FinanceTests(unittest.TestCase):
         self.assertEqual(cash['methods']['Pix'],600);self.assertEqual(cash['expected_cash_cents'],10720)
         self.assertEqual(cash['waiters']['Ana'],120)
         self.assertEqual(self.staff.get(self.endpoint('orders')).json['orders'],[])
-        self.assertEqual(self.staff.get(self.endpoint('tabs')).json['tabs'],[])
+        next_tab=self.staff.get(self.endpoint('tabs')).json['tabs'][0]
+        self.assertTrue(next_tab['open']);self.assertEqual(next_tab['session'],2)
+        self.assertEqual(next_tab['orders'],[]);self.assertEqual(next_tab['subtotal_cents'],0)
         self.assertEqual(len(self.staff.get(self.endpoint('reports')).json['receipts']),1)
     def test_underpayment_and_repeated_close(self):
         self.order();self.assertEqual(self.settle(False,[{'method':'Crédito','amount_cents':1199}]).status_code,400)
@@ -56,6 +58,9 @@ class FinanceTests(unittest.TestCase):
         self.order();self.assertEqual(self.settle().status_code,201)
         self.staffpost('tables/'+self.table['id']+'/open',{})
         self.assertEqual(self.staffpost('tables/'+self.table['id']+'/settle',{'session':1,'service':False,'payments':[]}).status_code,409)
+        self.assertEqual(self.post(self.guest,'/api/public/'+self.table['token']+'/orders',self.payload(),self.guest_csrf).status_code,201)
+        self.assertEqual(self.staff.get(self.endpoint('tabs')).json['tabs'][0]['subtotal_cents'],1200)
+        self.assertEqual(len(self.staff.get(self.endpoint('reports')).json['receipts']),1)
     def test_service_requires_waiter_and_defaults_optional(self):
         self.order();self.assertEqual(self.settle(True,[{'method':'Pix','amount_cents':1320}]).status_code,400)
         result=self.settle(False);self.assertEqual(result.json['receipt']['service_cents'],0)
