@@ -80,6 +80,7 @@ def subscription(bar):
 def bar_data(bar):return {'id':bar.id,'name':bar.name,'release':bar.release,**subscription(bar)}
 
 def create_app(config=None):
+    from finance import register_finance,active_cash,Assignment,Waiter
     app=Flask(__name__,static_folder=None)
     app.aborter.mapping[402]=SubscriptionRequired
     secret=os.environ.get('SECRET_KEY')
@@ -97,7 +98,10 @@ def create_app(config=None):
     if url.startswith('sqlite:'):
         @event.listens_for(engine,'connect')
         def sqlite_fk(dbapi,record):dbapi.execute('PRAGMA foreign_keys=ON')
-    Base.metadata.create_all(engine);app.extensions['engine']=engine
+    with engine.begin() as schema_connection:
+        if engine.dialect.name=='postgresql':schema_connection.exec_driver_sql('SELECT pg_advisory_xact_lock(287419550)')
+        Base.metadata.create_all(schema_connection)
+    app.extensions['engine']=engine
     attempts={}
     @app.before_request
     def before():
@@ -133,11 +137,12 @@ def create_app(config=None):
         result=request.get_json(silent=True)
         if not isinstance(result,dict):abort(400)
         return result
+    register_finance(app,access,require,data)
     @app.get('/')
     def home():return send_from_directory(app.root_path,'index.html')
     @app.get('/static/<name>')
     def public_asset(name):
-        if name not in ('app.js','style.css'):abort(404)
+        if name not in ('app.js','finance.js','style.css'):abort(404)
         return send_from_directory(app.root_path,name)
     @app.get('/health')
     def health():return jsonify(status='ok')
@@ -189,10 +194,13 @@ def create_app(config=None):
     def new_table(bar_id):
         access(bar_id);name=text(data(),'name',60)
         if g.db.scalar(select(Table).where(Table.bar_id==bar_id,Table.name==name)):abort(409,description='Mesa já cadastrada.')
-        t=Table(id=str(uuid.uuid4()),bar_id=bar_id,name=name,token=secrets.token_urlsafe(24));g.db.add(t);g.db.commit();return jsonify(id=t.id),201
+        t=Table(id=str(uuid.uuid4()),bar_id=bar_id,name=name,token=secrets.token_urlsafe(24));
+        if active_cash(bar_id):t.opened=True;t.session_no=1;t.opened_at=stamp()
+        g.db.add(t);g.db.commit();return jsonify(id=t.id),201
     @app.post('/api/bars/<bar_id>/tables/open')
     def open_tables(bar_id):
         access(bar_id)
+        if not active_cash(bar_id):abort(409,description='Abra o caixa primeiro.')
         for t in g.db.scalars(select(Table).where(Table.bar_id==bar_id,Table.opened==False)):
             t.opened=True;t.session_no+=1;t.opened_at=stamp()
         g.db.commit();return jsonify(ok=True)
@@ -206,11 +214,11 @@ def create_app(config=None):
         return t,bar
     @app.get('/api/public/<token>')
     def menu(token):
-        t,b=public_table(token);return jsonify(bar=b.name,table=t.name,open=t.opened,session=t.session_no,products=[{'id':p.id,'name':p.name,'category':p.category,'price_cents':p.price_cents} for p in g.db.scalars(select(Product).where(Product.bar_id==b.id,Product.enabled==True))])
+        t,b=public_table(token);return jsonify(bar=b.name,table=t.name,open=t.opened and active_cash(b.id) is not None,session=t.session_no,waiter=(g.db.get(Waiter,g.db.get(Assignment,t.id).waiter_id).name if g.db.get(Assignment,t.id) else 'Sem garçom'),products=[{'id':p.id,'name':p.name,'category':p.category,'price_cents':p.price_cents} for p in g.db.scalars(select(Product).where(Product.bar_id==b.id,Product.enabled==True))])
     @app.post('/api/public/<token>/orders')
     def order(token):
         t,b=public_table(token,True)
-        if not t.opened:abort(409,description='Mesa fechada. Solicite a abertura à equipe.')
+        if not t.opened or not active_cash(b.id):abort(409,description='Mesa ou caixa fechado. Solicite a abertura à equipe.')
         d=data();name=text(d,'name',80);phone=re.sub(r'\D','',text(d,'phone',20));rid=text(d,'request_id',80)
         if len(phone)==13 and phone.startswith('55'):phone=phone[2:]
         if not re.fullmatch(r'[1-9][0-9]9[0-9]{8}',phone):abort(400,description='Celular inválido.')
@@ -232,7 +240,7 @@ def create_app(config=None):
         o=Order(id=str(uuid.uuid4()),bar_id=b.id,table_id=t.id,session_no=t.session_no,customer_name=name,phone=phone,items=snapshots,total_cents=total,note=note,status='Recebido',created_at=stamp(),request_id=rid);g.db.add(o);g.db.commit();return jsonify(id=o.id,total_cents=total),201
     @app.get('/api/bars/<bar_id>/orders')
     def orders(bar_id):
-        access(bar_id);return jsonify(orders=[{'id':o.id,'table':g.db.get(Table,o.table_id).name,'name':o.customer_name,'phone':o.phone,'items':o.items,'total_cents':o.total_cents,'status':o.status,'created_at':o.created_at} for o in g.db.scalars(select(Order).where(Order.bar_id==bar_id).order_by(Order.created_at.desc()).limit(500))])
+        access(bar_id);return jsonify(orders=[{'id':o.id,'table':g.db.get(Table,o.table_id).name,'name':o.customer_name,'phone':o.phone,'items':o.items,'total_cents':o.total_cents,'status':o.status,'created_at':o.created_at} for o in g.db.scalars(select(Order).join(Table,Order.table_id==Table.id).where(Order.bar_id==bar_id,Table.opened==True,Order.session_no==Table.session_no).order_by(Order.created_at.desc()).limit(500))])
     @app.post('/api/bars/<bar_id>/orders/<order_id>/advance')
     def advance(bar_id,order_id):
         access(bar_id);o=g.db.get(Order,order_id)
@@ -247,4 +255,5 @@ def create_app(config=None):
             db.add(User(id=str(uuid.uuid4()),email=email,password_hash=generate_password_hash(password),role='owner'));db.commit()
         print('Administrador criado. A senha não foi gravada no código.')
     return app
+
 

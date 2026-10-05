@@ -27,7 +27,7 @@ class SecurityAndOrders(unittest.TestCase):
         csrf=client.get('/api/session').json['csrf'];result=self.post(client,'/api/login',{'email':email,'password':password},csrf);self.assertEqual(result.status_code,200);return result.json['csrf']
     def post(self,client,path,data,csrf):return client.post(path,json=data,headers={'X-CSRF-Token':csrf})
     def payload(self):return {'name':'Cliente','phone':'11999999999','request_id':str(uuid.uuid4()),'total_cents':0,'items':[{'id':self.product,'quantity':2}]}
-    def open(self):self.post(self.staff,f'/api/bars/{self.bars[0]}/tables/open',{},self.staff_csrf)
+    def open(self):self.post(self.staff,f'/api/bars/{self.bars[0]}/cash/open',{'opening_cents':10000},self.staff_csrf)
     def test_login_and_hash(self):
         with Session(self.app.extensions['engine']) as db:
             u=db.scalar(select(User).where(User.email=='bar1@example.test'));self.assertNotIn('BarTest123!',u.password_hash)
@@ -64,3 +64,4 @@ class SecurityAndOrders(unittest.TestCase):
         app=create_app({'TESTING':True,'SECRET_KEY':'test-only-key-not-for-production','DATABASE_URL':self.url});client=app.test_client();self.login(client,'bar1@example.test','BarTest123!');self.assertEqual(len(client.get(f'/api/bars/{self.bars[0]}/products').json['products']),1);app.extensions['engine'].dispose()
 
 if __name__=='__main__':unittest.main()
+

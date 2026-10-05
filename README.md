@@ -1,43 +1,28 @@
-# BarZap — base de servidor para nuvem
+# BarZap — versão integrada para testes em nuvem
 
-Esta pasta é uma etapa nova, separada do protótipo completo anterior. Tem banco de dados e autenticação no servidor, não senhas no JavaScript.
+Painel por bar com login no servidor, produtos por categoria, mesas, garçons, pedidos, caixa diário, comandas e relatórios. Os registros permanecem no PostgreSQL; senhas são hashes e dados de cada bar são isolados por autorização no servidor.
 
-## O que está implementado e testado
+## Rotina
+1. Cadastre produtos, mesas e garçons. A aba QR Codes permite cadastrar as mesas de 1 a 50 sem alterar tokens existentes e gerar PDF das mesas selecionadas.
+2. Abra o caixa e informe o troco diário. Todas as mesas fechadas ficam disponíveis. Pendências anteriores permanecem intactas.
+3. O cliente entra pelo QR e faz pedidos com nome e celular; a identificação fica lembrada no mesmo navegador e sessão da mesa.
+4. No atendimento, atribua o garçom e receba a mesa. Os 10% começam desmarcados. Adicione quantos pagamentos forem necessários em Pix, dinheiro, débito ou crédito. Os valores devem somar exatamente a conta.
+5. A comanda fechada sai do atendimento e fica na aba Comandas fechadas, com impressão, data/hora de abertura, fechamento, garçom, produtos e pagamentos.
+6. Feche o caixa informando dinheiro contado incluindo troco. Se houver consumo não recebido, é exigida a senha do dono do bar ou administrador e um motivo. O relatório registra quem autorizou, quem operou e as mesas pendentes. Mesas vazias fecham automaticamente. As pendências não contam como valores recebidos.
+7. Consulte Fechamentos de caixa com valores separados, troco, taxa por garçom e diferença entre dinheiro esperado e contado. Os relatórios têm filtros de data e impressão.
 
-Login com hash de senha, sessão HTTPOnly e proteção CSRF; administrador geral e responsável limitado ao bar; cadastro e ordem de liberação de bares; início na data atual, 30 dias de assinatura e 5 dias de tolerância validados no servidor; produtos com categoria/descrição/valor; mesas com link próprio; abertura de mesas; pedidos públicos com nome e telefone; valores calculados a partir dos preços do banco; identificador para evitar pedidos duplicados em novas tentativas; consulta de pedidos em outra sessão e atualização de status. O painel consulta o servidor a cada 3 segundos e pode emitir alerta sonoro. O banco aceita SQLite para desenvolvimento e PostgreSQL para produção.
+Pagamentos são registros de recebimentos feitos pelo bar. Este código não realiza cobranças, transferências ou integração com maquininhas. A cobrança automática da assinatura ainda não foi implementada. Validade: 30 dias e mais 5 dias de tolerância, controlados no servidor; administrador pode renovar manualmente.
 
-## O que ainda não está migrado
+## Configuração
+Python 3.12 e dependências de requirements.txt. Produção: APP_ENV=production, SECRET_KEY aleatória com ao menos 32 caracteres, DATABASE_URL PostgreSQL e TRUSTED_HOSTS com o domínio do aplicativo. Dockerfile inicia Gunicorn com um worker. A criação inicial das tabelas no PostgreSQL usa trava de transação para evitar inicializações simultâneas.
 
-Caixa, troco, fechamento de comandas, pagamentos divididos, 10% por garçom, relatórios, impressão e geração dos 50 QR Codes continuam no protótipo anterior. A tela desta pasta é para validar o servidor e o fluxo de pedidos; não substitui ainda todas as telas do BarZap completo. Não há cobrança automática, conta de hospedagem, domínio ou publicação criados. A renovação administrativa atual é manual. Não importe credenciais ou saldos do protótipo automaticamente.
+No primeiro início, ADMIN_EMAIL e ADMIN_PASSWORD (ao menos 10 caracteres) podem criar o administrador. Contas existentes não são sobrescritas. Depois de confirmar o acesso, remova ADMIN_PASSWORD do painel de ambiente. Não coloque segredos no GitHub. O comando Flask create-admin continua disponível para instalações privadas.
 
-## Testar localmente
+Desenvolvimento: use SECRET_KEY de testes e DATABASE_URL SQLite em pasta de trabalho; execute `python -m unittest discover -p "test_*.py"`. O servidor Flask de desenvolvimento não é a configuração de produção.
 
-Instale Python 3.12, crie um ambiente virtual nesta pasta e instale requirements.txt. No Windows, gunicorn não é instalado; o teste pode usar Flask apenas na rede local. Configure as variáveis no PowerShell (não envie os valores para outras pessoas):
+## Dados e validação
+A integração adiciona novas tabelas. Não remove ou renomeia as tabelas anteriores de bares, usuários, produtos, mesas ou pedidos. Pedidos anteriores da sessão aberta podem ser recebidos no primeiro caixa. Dados do antigo protótipo localStorage não são importados automaticamente.
 
-```powershell
-$env:SECRET_KEY = (python -c "import secrets; print(secrets.token_hex(32))")
-$env:ADMIN_EMAIL = 'Dnadigital.vca@gmail.com'
-$taskAdminSecret = Read-Host 'Senha inicial do administrador' -AsSecureString
-$env:ADMIN_PASSWORD = [System.Net.NetworkCredential]::new('', $taskAdminSecret).Password
-python -m flask --app server:create_app create-admin
-Remove-Item Env:ADMIN_PASSWORD
-python -m flask --app server:create_app run --host 0.0.0.0 --port 8000
-```
+20 testes locais verificaram autenticação, privacidade, isolamento, preços, tolerância, persistência, caixa, pagamentos divididos, taxa opcional, pendências, diferença de caixa, recibos, proteção contra fechamento duplicado e PDFs. Um fluxo local com dados fictícios foi verificado na tela. PDF de 50 mesas foi gerado com 9 páginas e inspecionado visualmente. A atualização financeira ainda precisa ser validada no PostgreSQL hospedado após publicação.
 
-A senha é armazenada apenas como hash no banco. Escolha uma nova senha para produção porque a senha do protótipo já apareceu no código entregue. Não coloque a senha no repositório. A senha digitada fica oculta no terminal. O banco SQLite local é criado quando o servidor inicia, não é enviado no pacote.
-
-Abra http://localhost:8000, faça login e cadastre o primeiro bar. No painel do bar, cadastre produto e mesa, disponibilize as mesas e abra o link de atendimento em outro navegador ou celular conectado à rede. Cadastros reais e pedidos compartilham o mesmo banco no servidor. Ative som no painel para ouvir novos pedidos. Para testar: `python -m unittest test_server.py`.
-
-## Preparação para hospedagem
-
-No Render, um Web Service executaria esta pasta com build `pip install -r requirements.txt` e start `gunicorn --workers 2 --bind 0.0.0.0:$PORT wsgi:app`, com um banco PostgreSQL. Configure SECRET_KEY, DATABASE_URL, APP_ENV=production e TRUSTED_HOSTS no painel do serviço, conforme .env.example. Não copie valores de exemplo literalmente. HTTPS é fornecido pela hospedagem; domínio e custos precisam ser aprovados antes da contratação/publicação. O Dockerfile é uma alternativa de empacotamento; não foi executado neste ambiente.
-
-Crie o administrador uma única vez com o comando create-admin em ambiente privado. Evite deixar ADMIN_PASSWORD configurada após a criação. Não publique o protótipo antigo com suas senhas de demonstração. Nenhuma chave de pagamento foi configurada aqui.
-
-## Limites de operação
-
-O bloqueio de login por tentativas usa memória do processo e precisa de armazenamento compartilhado antes de produção com múltiplos workers. A base usa create_all para criação inicial; migrações versionadas, backups, recuperação de senha, revisão de segurança e testes de concorrência/carga ainda precisam ser implementados antes do uso comercial. Os testes foram feitos com SQLite e clientes HTTP internos do Flask; PostgreSQL e hospedagem externa não foram testados nesta etapa. Nenhum servidor público foi iniciado.
-
-Referências: https://flask.palletsprojects.com/en/stable/deploying/gunicorn/ e https://render.com/docs/web-services.
-
-Validação: 10 testes passaram (autenticação, hash, CSRF, isolamento, privacidade, pedidos, preços, tolerância, renovação e persistência). Sintaxe da interface validada. PostgreSQL e hospedagem externa ainda não foram testados.
+Antes do uso comercial: implementar backups e migrações versionadas, recuperação de senha, cobrança de assinatura e revisão de segurança/carga. O controle de tentativas está na memória do worker. O banco gratuito do Render expira; sua capacidade e disponibilidade devem ser consideradas no uso definitivo.
