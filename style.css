@@ -6,3 +6,5 @@
 .photo-missing{display:flex;align-items:center;justify-content:center;background:#edf3ef;color:#597263;font-size:14px;text-align:center}
 
 .catalog-row{padding:12px;border-bottom:1px solid #ddd;display:flex;flex-wrap:wrap;align-items:center;gap:8px}.catalog-row input{width:120px}.catalog-row .product-thumb{flex-shrink:0}
+
+.stock-low{padding:12px;border-left:4px solid #d78b1c;background:#fff6df}.stock-card{margin:12px 0}.stock-card form{display:flex;flex-wrap:wrap;gap:8px}.stock-card input,.stock-card select{max-width:260px}

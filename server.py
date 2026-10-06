@@ -118,6 +118,7 @@ def bar_data(bar):return {'id':bar.id,'name':bar.name,'release':bar.release,**su
 
 def create_app(config=None):
     from finance import register_finance,active_cash,Assignment,Waiter
+    from inventory import register_inventory,lock_bar,sale
     app=Flask(__name__,static_folder=None)
     app.aborter.mapping[402]=SubscriptionRequired
     secret=os.environ.get('SECRET_KEY')
@@ -203,11 +204,12 @@ def create_app(config=None):
         photo.token=secrets.token_urlsafe(24);photo.content=content;photo.details=details;g.db.commit()
         return 'found'
     register_finance(app,access,require,data)
+    register_inventory(app,access,data)
     @app.get('/')
     def home():return send_from_directory(app.root_path,'index.html')
     @app.get('/static/<name>')
     def public_asset(name):
-        if name not in ('app.js','finance.js','style.css') and name not in FILES and name not in starter_catalog.STATIC_FILES:abort(404)
+        if name not in ('app.js','finance.js','inventory.js','style.css') and name not in FILES and name not in starter_catalog.STATIC_FILES:abort(404)
         return send_from_directory(app.root_path,name)
     @app.get('/health')
     def health():return jsonify(status='ok')
@@ -307,6 +309,9 @@ def create_app(config=None):
         t,b=public_table(token);return jsonify(bar=b.name,table=t.name,open=t.opened and active_cash(b.id) is not None,session=t.session_no,waiter=(g.db.get(Waiter,g.db.get(Assignment,t.id).waiter_id).name if g.db.get(Assignment,t.id) else 'Sem garçom'),products=[product_view(p) for p in g.db.scalars(select(Product).where(Product.bar_id==b.id,Product.enabled==True,Product.price_cents>0))])
     @app.post('/api/public/<token>/orders')
     def order(token):
+        t,b=public_table(token)
+        lock_bar(g.db,b.id)
+        g.db.expire(t)
         t,b=public_table(token,True)
         if not t.opened or not active_cash(b.id):abort(409,description='Mesa ou caixa fechado. Solicite a abertura à equipe.')
         d=data();name=text(d,'name',80);phone=re.sub(r'\D','',text(d,'phone',20));rid=text(d,'request_id',80)
@@ -327,7 +332,7 @@ def create_app(config=None):
             snapshots.append({'id':p.id,'name':p.name,'quantity':qty,'unit_cents':p.price_cents});total+=p.price_cents*qty
         note=d.get('note','')
         if not isinstance(note,str) or len(note)>500:abort(400)
-        o=Order(id=str(uuid.uuid4()),bar_id=b.id,table_id=t.id,session_no=t.session_no,customer_name=name,phone=phone,items=snapshots,total_cents=total,note=note,status='Recebido',created_at=stamp(),request_id=rid);g.db.add(o);g.db.commit();return jsonify(id=o.id,total_cents=total),201
+        o=Order(id=str(uuid.uuid4()),bar_id=b.id,table_id=t.id,session_no=t.session_no,customer_name=name,phone=phone,items=snapshots,total_cents=total,note=note,status='Recebido',created_at=stamp(),request_id=rid);g.db.add(o);g.db.flush();sale(g.db,o);g.db.commit();return jsonify(id=o.id,total_cents=total),201
     @app.get('/api/bars/<bar_id>/orders')
     def orders(bar_id):
         access(bar_id);return jsonify(orders=[{'id':o.id,'table':g.db.get(Table,o.table_id).name,'name':o.customer_name,'phone':o.phone,'items':o.items,'total_cents':o.total_cents,'status':o.status,'created_at':o.created_at} for o in g.db.scalars(select(Order).join(Table,Order.table_id==Table.id).where(Order.bar_id==bar_id,Table.opened==True,Order.session_no==Table.session_no).order_by(Order.created_at.desc()).limit(500))])
