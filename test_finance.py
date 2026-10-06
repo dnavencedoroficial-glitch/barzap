@@ -77,6 +77,25 @@ class FinanceTests(unittest.TestCase):
         self.assertEqual(result.status_code,200)
         self.assertEqual(len(PdfReader(BytesIO(result.data)).pages),1)
         self.assertEqual(self.guest.get(self.endpoint('qr.pdf')+'?table='+self.table['id']).status_code,401)
+    def test_join_payment_and_independent_reopening(self):
+        self.order();self.staffpost('tables',{'name':'2'})
+        tables=self.staff.get(self.endpoint('tables')).json['tables'];second=next(t for t in tables if t['name']=='2')
+        self.assertEqual(self.post(self.guest,'/api/public/'+second['token']+'/orders',self.payload(),self.guest_csrf).status_code,201)
+        tabs=self.staff.get(self.endpoint('tabs')).json['tabs'];sessions={t['table_id']:t['session'] for t in tabs}
+        joined=self.staffpost('tables/join',{'tables':[self.table['id'],second['id']],'sessions':sessions})
+        self.assertEqual(joined.status_code,200)
+        group=self.staff.get(self.endpoint('tabs')).json['tabs'];self.assertEqual(len(group),1);self.assertEqual(group[0]['subtotal_cents'],2400)
+        result=self.settle(False,[{'method':'Pix','amount_cents':1000},{'method':'Dinheiro','amount_cents':1400}])
+        self.assertEqual(result.status_code,201);self.assertEqual(len(result.json['receipt']['members']),2)
+        next_tabs=self.staff.get(self.endpoint('tabs')).json['tabs'];self.assertEqual(len(next_tabs),2)
+        self.assertTrue(all(t['session']==2 and not t['orders'] for t in next_tabs))
+        self.assertEqual(len(self.staff.get(self.endpoint('reports')).json['receipts']),1)
+    def test_join_foreign_table_and_stale_session_rejected(self):
+        self.open();self.staffpost('tables',{'name':'2'})
+        second=next(t for t in self.staff.get(self.endpoint('tables')).json['tables'] if t['name']=='2')
+        ids=[self.table['id'],second['id']]
+        self.assertEqual(self.staffpost('tables/join',{'tables':ids,'sessions':{i:99 for i in ids}}).status_code,409)
+        self.assertEqual(self.staffpost('tables/join',{'tables':[self.table['id'],'foreign'],'sessions':{}}).status_code,404)
 
 if __name__=='__main__':unittest.main()
 

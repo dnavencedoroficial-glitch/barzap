@@ -29,6 +29,11 @@ class Assignment(Base):
     table_id:Mapped[str]=mapped_column(ForeignKey('tables.id'),primary_key=True)
     waiter_id:Mapped[str]=mapped_column(ForeignKey('waiters.id'))
 
+class JoinedTable(Base):
+    __tablename__='joined_tables'
+    table_id:Mapped[str]=mapped_column(ForeignKey('tables.id'),primary_key=True)
+    leader_id:Mapped[str]=mapped_column(ForeignKey('tables.id'))
+
 class Receipt(Base):
     __tablename__='closed_tabs'
     __table_args__=(UniqueConstraint('table_id','session_no'),)
@@ -49,17 +54,28 @@ def amount(value,zero=True):
 def active_cash(bar_id):
     return g.db.scalar(select(Cash).where(Cash.bar_id==bar_id,Cash.closed_at==None))
 
+def joined_members(table):
+    membership=g.db.get(JoinedTable,table.id)
+    if not membership:return [table]
+    return list(g.db.scalars(select(Table).join(JoinedTable,Table.id==JoinedTable.table_id).where(JoinedTable.leader_id==membership.leader_id).order_by(Table.name)))
+
 def tab_orders(table):
-    return list(g.db.scalars(select(Order).where(Order.table_id==table.id,Order.session_no==table.session_no).order_by(Order.created_at)))
+    orders=[]
+    for member in joined_members(table):
+        orders.extend(g.db.scalars(select(Order).where(Order.table_id==member.id,Order.session_no==member.session_no)))
+    return sorted(orders,key=lambda o:o.created_at)
 
 def tab_data(table):
+    members=joined_members(table)
+    membership=g.db.get(JoinedTable,table.id)
+    if membership:table=g.db.get(Table,membership.leader_id)
     orders=tab_orders(table)
     assignment=g.db.get(Assignment,table.id)
     waiter=g.db.get(Waiter,assignment.waiter_id) if assignment else None
-    return {'table_id':table.id,'table':table.name,'session':table.session_no,'open':table.opened,
+    return {'table_id':table.id,'table':' + '.join(t.name for t in members),'members':[{'id':t.id,'name':t.name,'session':t.session_no} for t in members],'session':table.session_no,'open':table.opened,
             'opened_at':table.opened_at,'waiter_id':waiter.id if waiter else None,
             'waiter':waiter.name if waiter else 'Sem garçom','subtotal_cents':sum(o.total_cents for o in orders),
-            'orders':[{'id':o.id,'name':o.customer_name,'items':o.items,'note':o.note,'total_cents':o.total_cents} for o in orders]}
+            'orders':[{'id':o.id,'table':g.db.get(Table,o.table_id).name,'name':o.customer_name,'items':o.items,'note':o.note,'total_cents':o.total_cents} for o in orders]}
 
 def cash_summary(cash):
     by_method={method:0 for method in METHODS}; waiters=defaultdict(int); subtotal=0;service=0
@@ -155,7 +171,28 @@ def register_finance(app,access,require,data):
     @app.get('/api/bars/<bar_id>/tabs')
     def tabs(bar_id):
         access(bar_id)
-        return jsonify(tabs=[tab_data(t) for t in g.db.scalars(select(Table).where(Table.bar_id==bar_id,Table.opened==True).order_by(Table.name))])
+        rows=[];seen=set()
+        for t in g.db.scalars(select(Table).where(Table.bar_id==bar_id,Table.opened==True).order_by(Table.name)):
+            tab=tab_data(t)
+            if tab['table_id'] not in seen:rows.append(tab);seen.add(tab['table_id'])
+        return jsonify(tabs=rows)
+
+    @app.post('/api/bars/<bar_id>/tables/join')
+    def join_tables(bar_id):
+        lock(bar_id);d=data();ids=d.get('tables');sessions=d.get('sessions',{})
+        if not isinstance(ids,list) or not 2<=len(ids)<=100 or not all(isinstance(i,str) for i in ids) or len(set(ids))!=len(ids) or not isinstance(sessions,dict):abort(400,description='Selecione pelo menos duas mesas distintas.')
+        tables=list(g.db.scalars(select(Table).where(Table.bar_id==bar_id,Table.id.in_(ids)).with_for_update()))
+        if len(tables)!=len(ids):abort(404)
+        if not active_cash(bar_id):abort(409,description='Abra o caixa primeiro.')
+        if any(not t.opened or sessions.get(t.id)!=t.session_no for t in tables):abort(409,description='Mesas alteradas. Atualize a tela antes de juntar.')
+        # Existing groups must be selected in full; joining never removes orders.
+        if any(any(m.id not in ids for m in joined_members(t)) for t in tables):abort(409,description='Selecione todas as mesas dos grupos existentes.')
+        leader=g.db.get(Table,ids[0])
+        for t in tables:
+            membership=g.db.get(JoinedTable,t.id)
+            if membership:membership.leader_id=leader.id
+            else:g.db.add(JoinedTable(table_id=t.id,leader_id=leader.id))
+        g.db.commit();return jsonify(ok=True)
 
     @app.post('/api/bars/<bar_id>/tables/<table_id>/open')
     def table_open(bar_id,table_id):
@@ -174,6 +211,10 @@ def register_finance(app,access,require,data):
         if not cash:abort(409,description='Abra o caixa antes de receber.')
         if not t.opened:abort(409,description='Esta comanda já foi fechada.')
         d=data()
+        membership=g.db.get(JoinedTable,t.id)
+        if membership and membership.leader_id!=t.id:abort(409,description='Receba o grupo pela comanda principal.')
+        members=joined_members(t)
+        list(g.db.scalars(select(Table).where(Table.id.in_([m.id for m in members])).with_for_update()))
         if d.get('session')!=t.session_no:abort(409,description='Comanda alterada. Atualize a tela.')
         snap=tab_data(t)
         if type(d.get('service'))!=bool:abort(400)
@@ -191,7 +232,12 @@ def register_finance(app,access,require,data):
         receipt=Receipt(id=str(uuid.uuid4()),bar_id=bar_id,cash_id=cash.id,table_id=t.id,session_no=t.session_no,snapshot=snap,closed_at=snap['closed_at'])
         # Keep the table available for the next customer in a fresh session.
         # The receipt retains the old session and its complete snapshot.
-        g.db.add(receipt);t.opened=True;t.session_no+=1;t.opened_at=stamp();g.db.commit()
+        g.db.add(receipt)
+        for member in members:
+            member.opened=True;member.session_no+=1;member.opened_at=stamp()
+            membership=g.db.get(JoinedTable,member.id)
+            if membership:g.db.delete(membership)
+        g.db.commit()
         return jsonify(receipt={'id':receipt.id,**snap}),201
 
     @app.post('/api/bars/<bar_id>/cash/close')
@@ -199,8 +245,10 @@ def register_finance(app,access,require,data):
         lock(bar_id);cash=active_cash(bar_id)
         if not cash:abort(409,description='Não há caixa aberto.')
         list(g.db.scalars(select(Table).where(Table.bar_id==bar_id).with_for_update()))
-        d=data();pending=[tab_data(t) for t in g.db.scalars(select(Table).where(Table.bar_id==bar_id,Table.opened==True))]
-        pending=[t for t in pending if t['orders']]
+        d=data();pending=[];seen=set()
+        for table in g.db.scalars(select(Table).where(Table.bar_id==bar_id,Table.opened==True)):
+            tab=tab_data(table)
+            if tab['orders'] and tab['table_id'] not in seen:pending.append(tab);seen.add(tab['table_id'])
         if pending:
             password=d.get('owner_password','')
             if not isinstance(password,str):abort(400)
@@ -223,7 +271,10 @@ def register_finance(app,access,require,data):
         cash.closed_at=stamp()
         # Empty tables can close without an unpaid tab; pending tabs remain intact.
         for t in g.db.scalars(select(Table).where(Table.bar_id==bar_id,Table.opened==True)):
-            if not tab_orders(t):t.opened=False
+            if not tab_orders(t):
+                t.opened=False
+                membership=g.db.get(JoinedTable,t.id)
+                if membership:g.db.delete(membership)
         g.db.commit();return jsonify(cash=cash_summary(cash))
 
     @app.get('/api/bars/<bar_id>/reports')
