@@ -13,7 +13,7 @@ class SubscriptionRequired(HTTPException):
     code=402
     description="Assinatura vencida."
 from sqlalchemy import create_engine,select,event,ForeignKey,UniqueConstraint
-from sqlalchemy.orm import DeclarativeBase,Mapped,mapped_column,Session
+from sqlalchemy.orm import DeclarativeBase,Mapped,mapped_column,Session,relationship
 from sqlalchemy import String,Integer,Boolean,Date,JSON,LargeBinary
 
 class Base(DeclarativeBase):pass
@@ -24,6 +24,10 @@ class Bar(Base):
     start:Mapped[date]=mapped_column(Date)
     due:Mapped[date]=mapped_column(Date)
     release:Mapped[int]=mapped_column(Integer,unique=True)
+    trial:Mapped['Trial|None']=relationship(uselist=False,cascade='all, delete-orphan')
+class Trial(Base):
+    __tablename__='bar_trials'
+    bar_id:Mapped[str]=mapped_column(ForeignKey('bars.id'),primary_key=True)
 class User(Base):
     __tablename__='users'
     id:Mapped[str]=mapped_column(String,primary_key=True)
@@ -112,8 +116,9 @@ def cents(value):
         return int(number*100)
     except (InvalidOperation,ValueError,TypeError):abort(400,description='Valor inválido')
 def subscription(bar):
-    block=bar.due+timedelta(days=5)
-    return {'start':bar.start.isoformat(),'due':bar.due.isoformat(),'block':block.isoformat(),'status':'Bloqueada' if today()>=block else 'Em tolerância' if today()>=bar.due else 'Ativa'}
+    is_trial=bar.trial is not None
+    block=bar.due if is_trial else bar.due+timedelta(days=5)
+    return {'start':bar.start.isoformat(),'due':bar.due.isoformat(),'block':block.isoformat(),'trial':is_trial,'notice':'Teste gratuito de somente 7 dias. Ao terminar, solicite a assinatura de R$ 29,90 por mês.' if is_trial else '', 'status':'Bloqueada' if today()>=block else 'Teste gratuito' if is_trial else 'Em tolerância' if today()>=bar.due else 'Ativa'}
 def bar_data(bar):return {'id':bar.id,'name':bar.name,'release':bar.release,**subscription(bar)}
 
 def create_app(config=None):
@@ -175,7 +180,7 @@ def create_app(config=None):
     def access(bar_id,allow_expired=False):
         user=require();bar=g.db.get(Bar,bar_id)
         if not bar or (user.role!='owner' and user.bar_id!=bar_id):abort(404)
-        if not allow_expired and user.role!='owner' and subscription(bar)['status']=='Bloqueada':abort(402,description='Assinatura vencida após 5 dias de tolerância.')
+        if not allow_expired and user.role!='owner' and subscription(bar)['status']=='Bloqueada':abort(402,description='Seu teste gratuito de 7 dias terminou. Solicite a assinatura para continuar.' if bar.trial is not None else 'Assinatura vencida após 5 dias de tolerância.')
         return bar
     def data():
         result=request.get_json(silent=True)
@@ -236,15 +241,24 @@ def create_app(config=None):
     @app.post('/api/bars')
     def new_bar():
         require(True);d=data();name=text(d,'name');email=text(d,'email',200).lower();password=text(d,'password',200)
-        if not re.fullmatch(r'[^\s@]+@[^\s@]+\.[^\s@]+',email) or len(password)<8:abort(400,description='Informe e-mail válido e senha com ao menos 8 caracteres.')
+        is_trial=d.get('plan','paid')=='trial'
+        if d.get('plan','paid') not in ('paid','trial'):abort(400)
+        valid_login=re.fullmatch(r'[^\s@]+@[^\s@]+\.[^\s@]+',email) or (is_trial and re.fullmatch(r'[a-z][a-z0-9._-]{3,49}',email))
+        if not valid_login or len(password)<8:abort(400,description='Informe e-mail ou usuário válido e senha com ao menos 8 caracteres.')
         if g.db.scalar(select(User).where(User.email==email)):abort(409,description='E-mail já cadastrado.')
         last=g.db.scalar(select(Bar.release).order_by(Bar.release.desc()).limit(1)) or 0
-        bar=Bar(id=str(uuid.uuid4()),name=name,start=today(),due=today()+timedelta(days=30),release=last+1);g.db.add(bar);g.db.flush();g.db.add(User(id=str(uuid.uuid4()),email=email,password_hash=generate_password_hash(password),role='bar',bar_id=bar.id));
+        bar=Bar(id=str(uuid.uuid4()),name=name,start=today(),due=today()+timedelta(days=7 if is_trial else 30),release=last+1);g.db.add(bar);g.db.flush();g.db.add(User(id=str(uuid.uuid4()),email=email,password_hash=generate_password_hash(password),role='bar',bar_id=bar.id));
+        if is_trial:
+            bar.trial=Trial(bar_id=bar.id)
         if catalog_enabled:seed_catalog(g.db,bar.id)
         g.db.commit();return jsonify(bar=bar_data(bar)),201
     @app.post('/api/bars/<bar_id>/renew')
     def renew(bar_id):
-        require(True);bar=access(bar_id,True);bar.start=max(today(),bar.due);bar.due=bar.start+timedelta(days=30);g.db.commit();return jsonify(bar=bar_data(bar))
+        require(True);bar=access(bar_id,True);
+        was_trial=bar.trial is not None
+        if was_trial:
+            g.db.delete(bar.trial);bar.trial=None
+        bar.start=today() if was_trial else max(today(),bar.due);bar.due=bar.start+timedelta(days=30);g.db.commit();return jsonify(bar=bar_data(bar))
     @app.get('/api/bars/<bar_id>/products')
     def products(bar_id):
         access(bar_id);return jsonify(products=[product_view(p) for p in g.db.scalars(select(Product).where(Product.bar_id==bar_id,Product.enabled==True))])
