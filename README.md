@@ -43,3 +43,7 @@ Cada bar existente e novo recebe 61 bebidas revisadas com imagens locais: 31 ref
 ## Estoque
 
 A aba Estoque permite definir contagem atual e registrar compras, com motivo, operador e histórico das últimas 100 movimentações. Quantidades iniciais não são inventadas: produtos sem contagem ficam Não informado e não recebem baixa até a primeira contagem. Novos pedidos descontam unidades na mesma transação; reenvios não dão baixa duplicada. Saldo abaixo de 6 gera sugestão para completar 6, incluindo saldo zero ou negativo. O saldo não bloqueia pedidos: valores negativos sinalizam divergência que deve ser conferida. Contagens exigem inteiros não negativos. Nenhum pedido anterior à implantação é descontado retroativamente. Trava por bar serializa ajustes e pedidos. Tabelas adicionais product_stock e stock_movements; autorização por bar e CSRF, estoque não é publicado no cardápio do cliente.
+
+## Troco da comanda
+
+Recebimentos em dinheiro permitem valor entregue acima do saldo, com prévia do troco. Pix e cartões não podem exceder o total da conta. O servidor valida os totais e armazena valor entregue, troco e pagamento líquido no recibo. Em pagamentos divididos, o troco é abatido das linhas em dinheiro, da última para a primeira. O caixa soma apenas valores líquidos e informa o troco devolvido aos clientes. Recibos antigos permanecem compatíveis.

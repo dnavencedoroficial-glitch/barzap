@@ -78,15 +78,15 @@ def tab_data(table):
             'orders':[{'id':o.id,'table':g.db.get(Table,o.table_id).name,'name':o.customer_name,'items':o.items,'note':o.note,'total_cents':o.total_cents} for o in orders]}
 
 def cash_summary(cash):
-    by_method={method:0 for method in METHODS}; waiters=defaultdict(int); subtotal=0;service=0
+    by_method={method:0 for method in METHODS}; waiters=defaultdict(int); subtotal=0;service=0;returned=0
     receipts=list(g.db.scalars(select(Receipt).where(Receipt.cash_id==cash.id)))
     for receipt in receipts:
-        snap=receipt.snapshot;subtotal+=snap['subtotal_cents'];service+=snap['service_cents']
+        snap=receipt.snapshot;subtotal+=snap['subtotal_cents'];service+=snap['service_cents'];returned+=snap.get('change_cents',0)
         waiters[snap['waiter']]+=snap['service_cents']
         for p in snap['payments']:by_method[p['method']]+=p['amount_cents']
     return {'id':cash.id,'opened_at':cash.opened_at,'closed_at':cash.closed_at,
             'opening_cents':cash.opening_cents,'methods':by_method,'subtotal_cents':subtotal,
-            'service_cents':service,'waiters':dict(waiters),'received_cents':sum(by_method.values()),
+            'change_cents':returned,'service_cents':service,'waiters':dict(waiters),'received_cents':sum(by_method.values()),
             'expected_cash_cents':cash.opening_cents+by_method['Dinheiro'],'tabs':len(receipts),'closing':cash.closing}
 
 def register_finance(app,access,require,data):
@@ -241,7 +241,17 @@ def register_finance(app,access,require,data):
         for p in payments:
             if not isinstance(p,dict) or p.get('method') not in METHODS:abort(400)
             clean.append({'method':p['method'],'amount_cents':amount(p.get('amount_cents'),False),'person':str(p.get('person',''))[:80]})
-        if sum(p['amount_cents'] for p in clean)!=snap['total_cents']:abort(400,description='Os pagamentos precisam somar exatamente o total da comanda.')
+        received=sum(p['amount_cents'] for p in clean)
+        change=received-snap['total_cents']
+        if change<0:abort(400,description='Falta receber parte do total da comanda.')
+        cash_received=sum(p['amount_cents'] for p in clean if p['method']=='Dinheiro')
+        if change>cash_received:abort(400,description='Troco só pode ser devolvido de pagamentos em dinheiro. Confira Pix e cartões.')
+        remaining_change=change
+        for p in reversed(clean):
+            p['tendered_cents']=p['amount_cents'];p['change_cents']=0
+            if p['method']=='Dinheiro':
+                returned=min(remaining_change,p['amount_cents']);p['amount_cents']-=returned;p['change_cents']=returned;remaining_change-=returned
+        snap.update(tendered_cents=received,change_cents=change,cash_tendered_cents=cash_received)
         snap.update(payments=clean,bar=g.db.get(Bar,bar_id).name,closed_at=stamp())
         receipt=Receipt(id=str(uuid.uuid4()),bar_id=bar_id,cash_id=cash.id,table_id=t.id,session_no=t.session_no,snapshot=snap,closed_at=snap['closed_at'])
         # Keep the table available for the next customer in a fresh session.
