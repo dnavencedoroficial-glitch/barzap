@@ -15,7 +15,7 @@ class MenuImageTests(unittest.TestCase):
         for name,category,key in samples:
             photo=image_for(SimpleNamespace(name=name,category=category))
             self.assertEqual(photo['url'],'/static/menu-'+key+'.jpg')
-        for name,category in [('Brahma Duplo Malte','cerveja 600ml'),('Amstel','cerveja 350ml'),('Batata frita com frango','petisco')]:
+        for name,category in [('Brahma Duplo Malte','cerveja litro'),('Amstel','cerveja 550ml'),('Batata frita com frango','petisco')]:
             self.assertIsNone(image_for(SimpleNamespace(name=name,category=category)))
 
     def test_menu_images_preserve_price_and_bar_isolation(self):
@@ -34,7 +34,7 @@ class MenuImageTests(unittest.TestCase):
             response=self.guest.get('/static/'+name)
             self.assertEqual(response.status_code,200)
             self.assertEqual(response.mimetype,'image/jpeg')
-            self.assertGreater(len(response.data),1000)
+            self.assertGreater(len(response.data),1000);response.close()
         self.assertEqual(self.guest.get('/static/server.py').status_code,404)
 
 if __name__=='__main__':unittest.main()

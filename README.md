@@ -35,3 +35,7 @@ Batata frita: City Foodsters, Wikimedia Commons, CC BY 2.0. Batata com bacon e c
 
 
 Fotos automáticas ou fornecidas pelo bar são normalizadas como JPEG, sem metadados pessoais, e persistidas na tabela adicional product_photos do PostgreSQL. Nenhum pedido, cliente, telefone, e-mail ou nome de bar é enviado para buscar fotos; somente o nome do produto é usado na busca do Openverse. A consulta tem limite de tempo, tamanho e fonte. Não consulta nem baixa URLs fornecidas por usuários. O painel permite trocar a foto e enviar JPG, PNG ou WebP; o navegador reduz o arquivo antes do envio. A imagem buscada é ilustrativa e deve ser conferida pelo bar. Falha, limite ou indisponibilidade do provedor não impede o cadastro. Novas buscas precisam de internet no servidor.
+
+## Catálogo inicial de bebidas
+
+Cada bar existente e novo recebe 61 bebidas revisadas com imagens locais: 31 refrigerantes e 30 variantes de cervejas, nas embalagens confirmadas. A tabela adicional product_presets marca cada importação por bar; reiniciar não duplica nem restaura produtos excluídos. Correspondências existentes preservam nome, preço e ID. Novos itens começam com preço pendente (zero interno), ficam ocultos do cardápio público e são rejeitados em pedidos até o preço positivo ser salvo na aba Produtos. Preços podem ser editados individualmente com autorização do respectivo bar. Fontes e créditos em starter_catalog.json; imagens de embalagens pertencem aos respectivos titulares. Não importa dados de outros bares nem altera comandas.

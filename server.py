@@ -1,6 +1,7 @@
 import os,secrets,hmac,uuid,re,time
 from menu_images import product_data,FILES,image_for
 from auto_images import find_photo,uploaded_photo
+import starter_catalog
 from datetime import datetime,date,timedelta,timezone
 from decimal import Decimal,InvalidOperation
 from functools import wraps
@@ -48,6 +49,14 @@ class Product(Base):
     name:Mapped[str]=mapped_column(String(100))
     price_cents:Mapped[int]=mapped_column(Integer)
     enabled:Mapped[bool]=mapped_column(Boolean,default=True)
+class ProductPreset(Base):
+    __tablename__='product_presets'
+    __table_args__=(UniqueConstraint('bar_id','preset_key'),)
+    id:Mapped[str]=mapped_column(String,primary_key=True)
+    bar_id:Mapped[str]=mapped_column(ForeignKey('bars.id'))
+    preset_key:Mapped[str]=mapped_column(String(80))
+    product_id:Mapped[str]=mapped_column(ForeignKey('products.id'))
+
 class ProductPhoto(Base):
     __tablename__='product_photos'
     product_id:Mapped[str]=mapped_column(ForeignKey('products.id'),primary_key=True)
@@ -70,6 +79,19 @@ class Order(Base):
     status:Mapped[str]=mapped_column(String(20),default='Recebido')
     created_at:Mapped[str]=mapped_column(String)
     request_id:Mapped[str]=mapped_column(String(80))
+
+def seed_catalog(db,bar_id):
+    db.scalar(select(Bar).where(Bar.id==bar_id).with_for_update())
+    existing=list(db.scalars(select(Product).where(Product.bar_id==bar_id)))
+    imported=set(db.scalars(select(ProductPreset.preset_key).where(ProductPreset.bar_id==bar_id)))
+    for preset in starter_catalog.CATALOG:
+        if preset['key'] in imported:continue
+        product=next((p for p in existing if starter_catalog.matches(p,preset)),None)
+        if product is None:
+            product=Product(id=str(uuid.uuid4()),bar_id=bar_id,name=preset['name'],category=preset['category'],price_cents=0,enabled=True)
+            db.add(product);db.flush();existing.append(product)
+        db.add(ProductPreset(id=str(uuid.uuid4()),bar_id=bar_id,preset_key=preset['key'],product_id=product.id))
+    db.flush()
 
 def today():return datetime.now(ZoneInfo('America/Sao_Paulo')).date()
 def stamp():return datetime.now(timezone.utc).isoformat()
@@ -111,6 +133,12 @@ def create_app(config=None):
         if engine.dialect.name=='postgresql':schema_connection.exec_driver_sql('SELECT pg_advisory_xact_lock(287419550)')
         Base.metadata.create_all(schema_connection)
     app.extensions['engine']=engine
+    catalog_enabled=app.config.get('STARTER_CATALOG',not app.config.get('TESTING',False))
+    if catalog_enabled:
+        with Session(engine) as catalog_db:
+            for catalog_bar in catalog_db.scalars(select(Bar).order_by(Bar.id)):
+                seed_catalog(catalog_db,catalog_bar.id)
+            catalog_db.commit()
     attempts={}
     @app.before_request
     def before():
@@ -148,6 +176,9 @@ def create_app(config=None):
         return result
     def product_view(product):
         result=product_data(product)
+        preset=g.db.scalar(select(ProductPreset).where(ProductPreset.product_id==product.id))
+        if preset:result['image']=starter_catalog.metadata(starter_catalog.BY_KEY[preset.preset_key])
+        result['price_pending']=product.price_cents<=0
         photo=g.db.get(ProductPhoto,product.id)
         if photo:result['image']={**photo.details,'url':'/media/products/'+product.id+'/'+photo.token+'.jpg'}
         return result
@@ -170,7 +201,7 @@ def create_app(config=None):
     def home():return send_from_directory(app.root_path,'index.html')
     @app.get('/static/<name>')
     def public_asset(name):
-        if name not in ('app.js','finance.js','style.css') and name not in FILES:abort(404)
+        if name not in ('app.js','finance.js','style.css') and name not in FILES and name not in starter_catalog.STATIC_FILES:abort(404)
         return send_from_directory(app.root_path,name)
     @app.get('/health')
     def health():return jsonify(status='ok')
@@ -200,7 +231,9 @@ def create_app(config=None):
         if not re.fullmatch(r'[^\s@]+@[^\s@]+\.[^\s@]+',email) or len(password)<8:abort(400,description='Informe e-mail válido e senha com ao menos 8 caracteres.')
         if g.db.scalar(select(User).where(User.email==email)):abort(409,description='E-mail já cadastrado.')
         last=g.db.scalar(select(Bar.release).order_by(Bar.release.desc()).limit(1)) or 0
-        bar=Bar(id=str(uuid.uuid4()),name=name,start=today(),due=today()+timedelta(days=30),release=last+1);g.db.add(bar);g.db.flush();g.db.add(User(id=str(uuid.uuid4()),email=email,password_hash=generate_password_hash(password),role='bar',bar_id=bar.id));g.db.commit();return jsonify(bar=bar_data(bar)),201
+        bar=Bar(id=str(uuid.uuid4()),name=name,start=today(),due=today()+timedelta(days=30),release=last+1);g.db.add(bar);g.db.flush();g.db.add(User(id=str(uuid.uuid4()),email=email,password_hash=generate_password_hash(password),role='bar',bar_id=bar.id));
+        if catalog_enabled:seed_catalog(g.db,bar.id)
+        g.db.commit();return jsonify(bar=bar_data(bar)),201
     @app.post('/api/bars/<bar_id>/renew')
     def renew(bar_id):
         require(True);bar=access(bar_id,True);bar.start=max(today(),bar.due);bar.due=bar.start+timedelta(days=30);g.db.commit();return jsonify(bar=bar_data(bar))
@@ -215,6 +248,12 @@ def create_app(config=None):
             try:uploaded_photo(d['photo'])
             except ValueError as exc:abort(400,description=str(exc))
         g.db.commit();state=save_photo(p,d.get('photo'));return jsonify(id=p.id,image_state=state),201
+    @app.post('/api/bars/<bar_id>/products/<product_id>/price')
+    def product_price(bar_id,product_id):
+        access(bar_id);product=g.db.get(Product,product_id)
+        if not product or product.bar_id!=bar_id or not product.enabled:abort(404)
+        product.price_cents=cents(data().get('price'));g.db.commit()
+        return jsonify(product=product_view(product))
     @app.post('/api/bars/<bar_id>/products/<product_id>/image')
     def replace_product_photo(bar_id,product_id):
         access(bar_id);product=g.db.get(Product,product_id)
@@ -259,7 +298,7 @@ def create_app(config=None):
         return t,bar
     @app.get('/api/public/<token>')
     def menu(token):
-        t,b=public_table(token);return jsonify(bar=b.name,table=t.name,open=t.opened and active_cash(b.id) is not None,session=t.session_no,waiter=(g.db.get(Waiter,g.db.get(Assignment,t.id).waiter_id).name if g.db.get(Assignment,t.id) else 'Sem garçom'),products=[product_view(p) for p in g.db.scalars(select(Product).where(Product.bar_id==b.id,Product.enabled==True))])
+        t,b=public_table(token);return jsonify(bar=b.name,table=t.name,open=t.opened and active_cash(b.id) is not None,session=t.session_no,waiter=(g.db.get(Waiter,g.db.get(Assignment,t.id).waiter_id).name if g.db.get(Assignment,t.id) else 'Sem garçom'),products=[product_view(p) for p in g.db.scalars(select(Product).where(Product.bar_id==b.id,Product.enabled==True,Product.price_cents>0))])
     @app.post('/api/public/<token>/orders')
     def order(token):
         t,b=public_table(token,True)
@@ -278,7 +317,7 @@ def create_app(config=None):
             if not isinstance(line,dict):abort(400)
             if not isinstance(line.get('id'),str):abort(400)
             p=g.db.get(Product,line.get('id'));qty=line.get('quantity')
-            if not p or p.bar_id!=b.id or not p.enabled or type(qty)!=int or not 1<=qty<=100:abort(400,description='Produto ou quantidade inválida.')
+            if not p or p.bar_id!=b.id or not p.enabled or p.price_cents<=0 or type(qty)!=int or not 1<=qty<=100:abort(400,description='Produto ou quantidade inválida.')
             snapshots.append({'id':p.id,'name':p.name,'quantity':qty,'unit_cents':p.price_cents});total+=p.price_cents*qty
         note=d.get('note','')
         if not isinstance(note,str) or len(note)>500:abort(400)

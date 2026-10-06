@@ -1,0 +1,683 @@
+[
+  {
+    "key": "coca-2000",
+    "name": "Coca-Cola Original 2 litros",
+    "category": "Refrigerantes 2 litros",
+    "image_url": "https://andinacocacola.vtexassets.com/arquivos/ids/158758-800-auto?v=639156020671730000&width=800&height=auto&aspect=true",
+    "source": "https://andina.nasuacasa.coca-cola.com.br/coca-cola-original-pet-2l-110440-coca-pai/p",
+    "credit": "Coca-Cola Brasil / Andina",
+    "aliases": [],
+    "file": "drink-coca-2000.jpg"
+  },
+  {
+    "key": "coca-350",
+    "name": "Coca-Cola Original Lata 350 ml",
+    "category": "Refrigerantes Lata 350 ml",
+    "image_url": "https://andinacocacola.vtexassets.com/arquivos/ids/159494-800-auto?v=639251672561170000&width=800&height=auto&aspect=true",
+    "source": "https://andina.nasuacasa.coca-cola.com.br/coca-cola-original-lata-350ml/p",
+    "credit": "Coca-Cola Brasil / Andina",
+    "aliases": [],
+    "file": "drink-coca-350.jpg"
+  },
+  {
+    "key": "coca-zero-1500",
+    "name": "Coca-Cola Zero Açúcar 1,5 litro",
+    "category": "Refrigerantes 1,5 litro",
+    "image_url": "https://andinacocacola.vtexassets.com/arquivos/ids/159016-462-336?v=639225953281530000&width=462&height=336&aspect=true",
+    "source": "https://andina.nasuacasa.coca-cola.com.br/refrigerantes/coca--cola/zero-acucar",
+    "credit": "Coca-Cola Brasil / Andina",
+    "aliases": [],
+    "file": "drink-coca-zero-1500.jpg"
+  },
+  {
+    "key": "coca-zero-350",
+    "name": "Coca-Cola Zero Açúcar Lata 350 ml",
+    "category": "Refrigerantes Lata 350 ml",
+    "image_url": "https://andinacocacola.vtexassets.com/arquivos/ids/159493-462-336?v=639256985001800000&width=462&height=336&aspect=true",
+    "source": "https://andina.nasuacasa.coca-cola.com.br/refrigerantes/350-ml?map=category-1%2Cvolume",
+    "credit": "Coca-Cola Brasil / Andina",
+    "aliases": [],
+    "file": "drink-coca-zero-350.jpg"
+  },
+  {
+    "key": "fanta-laranja-2000",
+    "name": "Fanta Laranja 2 litros",
+    "category": "Refrigerantes 2 litros",
+    "image_url": "https://andinacocacola.vtexassets.com/arquivos/ids/159481-462-336?v=639244879170330000&width=462&height=336&aspect=true",
+    "source": "https://andina.nasuacasa.coca-cola.com.br/refrigerantes/2-l?map=category-1%2Cvolume",
+    "credit": "Coca-Cola Brasil / Andina",
+    "aliases": [],
+    "file": "drink-fanta-laranja-2000.jpg"
+  },
+  {
+    "key": "fanta-laranja-350",
+    "name": "Fanta Laranja Lata 350 ml",
+    "category": "Refrigerantes Lata 350 ml",
+    "image_url": "https://andinacocacola.vtexassets.com/arquivos/ids/159507-800-auto?v=639262188291270000&width=800&height=auto&aspect=true",
+    "source": "https://andina.nasuacasa.coca-cola.com.br/fanta-laranja-lata-350ml/p",
+    "credit": "Coca-Cola Brasil / Andina",
+    "aliases": [],
+    "file": "drink-fanta-laranja-350.jpg"
+  },
+  {
+    "key": "fanta-uva-2000",
+    "name": "Fanta Uva 2 litros",
+    "category": "Refrigerantes 2 litros",
+    "image_url": "https://andinacocacola.vtexassets.com/arquivos/ids/159484-462-336?v=639244880688500000&width=462&height=336&aspect=true",
+    "source": "https://andina.nasuacasa.coca-cola.com.br/refrigerantes/2-l?map=category-1%2Cvolume",
+    "credit": "Coca-Cola Brasil / Andina",
+    "aliases": [],
+    "file": "drink-fanta-uva-2000.jpg"
+  },
+  {
+    "key": "fanta-uva-350",
+    "name": "Fanta Uva Lata 350 ml",
+    "category": "Refrigerantes Lata 350 ml",
+    "image_url": "https://andinacocacola.vtexassets.com/arquivos/ids/159485-462-336?v=639244880960300000&width=462&height=336&aspect=true",
+    "source": "https://andina.nasuacasa.coca-cola.com.br/refrigerantes/350-ml?map=category-1%2Cvolume",
+    "credit": "Coca-Cola Brasil / Andina",
+    "aliases": [],
+    "file": "drink-fanta-uva-350.jpg"
+  },
+  {
+    "key": "guarana-ant-1000",
+    "name": "Guaraná Antarctica 1 litro",
+    "category": "Refrigerantes 1 litro",
+    "image_url": "https://rizatti.com.br/uploads/produtos/resized-guarana_pet_1l.png",
+    "source": "https://rizatti.com.br/nossas-marcas/refrigerantes/guarana-antarctica/guarana-antarctica",
+    "credit": "Rizatti / Guaraná Antarctica",
+    "aliases": [],
+    "file": "drink-guarana-ant-1000.jpg"
+  },
+  {
+    "key": "guarana-ant-2000",
+    "name": "Guaraná Antarctica 2 litros",
+    "category": "Refrigerantes 2 litros",
+    "image_url": "https://rizatti.com.br/uploads/produtos/resized-guarana_2l.png",
+    "source": "https://rizatti.com.br/nossas-marcas/refrigerantes/guarana-antarctica/guarana-antarctica",
+    "credit": "Rizatti / Guaraná Antarctica",
+    "aliases": [],
+    "file": "drink-guarana-ant-2000.jpg"
+  },
+  {
+    "key": "guarana-ant-600",
+    "name": "Guaraná Antarctica 600 ml",
+    "category": "Refrigerantes 600 ml",
+    "image_url": "https://rizatti.com.br/uploads/produtos/resized-guarana_600ml.png",
+    "source": "https://rizatti.com.br/nossas-marcas/refrigerantes/guarana-antarctica/guarana-antarctica",
+    "credit": "Rizatti / Guaraná Antarctica",
+    "aliases": [],
+    "file": "drink-guarana-ant-600.jpg"
+  },
+  {
+    "key": "guarana-ant-350",
+    "name": "Guaraná Antarctica Lata 350 ml",
+    "category": "Refrigerantes Lata 350 ml",
+    "image_url": "https://rizatti.com.br/uploads/produtos/resized-guarana_350ml.png",
+    "source": "https://rizatti.com.br/nossas-marcas/refrigerantes/guarana-antarctica/guarana-antarctica",
+    "credit": "Rizatti / Guaraná Antarctica",
+    "aliases": [],
+    "file": "drink-guarana-ant-350.jpg"
+  },
+  {
+    "key": "guarana-ant-zero-2000",
+    "name": "Guaraná Antarctica Zero 2 litros",
+    "category": "Refrigerantes 2 litros",
+    "image_url": "https://rizatti.com.br/uploads/produtos/resized-guarana-zero_2l.png",
+    "source": "https://rizatti.com.br/nossas-marcas/refrigerantes/guarana-antarctica/guarana-antarctica-zero",
+    "credit": "Rizatti / Guaraná Antarctica Zero",
+    "aliases": [],
+    "file": "drink-guarana-ant-zero-2000.jpg"
+  },
+  {
+    "key": "guarana-ant-zero-600",
+    "name": "Guaraná Antarctica Zero 600 ml",
+    "category": "Refrigerantes 600 ml",
+    "image_url": "https://rizatti.com.br/uploads/produtos/resized-guarana-zero_600ml.png",
+    "source": "https://rizatti.com.br/nossas-marcas/refrigerantes/guarana-antarctica/guarana-antarctica-zero",
+    "credit": "Rizatti / Guaraná Antarctica Zero",
+    "aliases": [],
+    "file": "drink-guarana-ant-zero-600.jpg"
+  },
+  {
+    "key": "guarana-ant-zero-350",
+    "name": "Guaraná Antarctica Zero Lata 350 ml",
+    "category": "Refrigerantes Lata 350 ml",
+    "image_url": "https://rizatti.com.br/uploads/produtos/resized-guarana-zero_350ml.png",
+    "source": "https://rizatti.com.br/nossas-marcas/refrigerantes/guarana-antarctica/guarana-antarctica-zero",
+    "credit": "Rizatti / Guaraná Antarctica Zero",
+    "aliases": [],
+    "file": "drink-guarana-ant-zero-350.jpg"
+  },
+  {
+    "key": "schweppes-citrus-350",
+    "name": "Schweppes Citrus Zero Açúcar Lata 350 ml",
+    "category": "Refrigerantes Lata 350 ml",
+    "image_url": "https://andinacocacola.vtexassets.com/arquivos/ids/159415-800-auto?v=639191406441200000&width=800&height=auto&aspect=true",
+    "source": "https://andina.nasuacasa.coca-cola.com.br/schweppes-citrus-lata-350ml/p",
+    "credit": "Coca-Cola Brasil / Andina",
+    "aliases": [],
+    "file": "drink-schweppes-citrus-350.jpg"
+  },
+  {
+    "key": "schweppes-tonica-350",
+    "name": "Schweppes Água Tônica Lata 350 ml",
+    "category": "Refrigerantes Lata 350 ml",
+    "image_url": "https://andinacocacola.vtexassets.com/arquivos/ids/159417-800-auto?v=639191405872000000&width=800&height=auto&aspect=true",
+    "source": "https://andina.nasuacasa.coca-cola.com.br/schweppes-tonica-lata-350ml/p",
+    "credit": "Coca-Cola Brasil / Andina",
+    "aliases": [],
+    "file": "drink-schweppes-tonica-350.jpg"
+  },
+  {
+    "key": "soda-ant-2000",
+    "name": "Soda Limonada Antarctica 2 litros",
+    "category": "Refrigerantes 2 litros",
+    "image_url": "https://rizatti.com.br/uploads/produtos/resized-soda_2l.png",
+    "source": "https://rizatti.com.br/nossas-marcas/refrigerantes/soda-limonada-antarctica/soda-limonada-antarctica",
+    "credit": "Rizatti / Soda Limonada Antarctica",
+    "aliases": [],
+    "file": "drink-soda-ant-2000.jpg"
+  },
+  {
+    "key": "soda-ant-600",
+    "name": "Soda Limonada Antarctica 600 ml",
+    "category": "Refrigerantes 600 ml",
+    "image_url": "https://rizatti.com.br/uploads/produtos/resized-soda_600ml.png",
+    "source": "https://rizatti.com.br/nossas-marcas/refrigerantes/soda-limonada-antarctica/soda-limonada-antarctica",
+    "credit": "Rizatti / Soda Limonada Antarctica",
+    "aliases": [],
+    "file": "drink-soda-ant-600.jpg"
+  },
+  {
+    "key": "soda-ant-350",
+    "name": "Soda Limonada Antarctica Lata 350 ml",
+    "category": "Refrigerantes Lata 350 ml",
+    "image_url": "https://rizatti.com.br/uploads/produtos/resized-soda_350ml.png",
+    "source": "https://rizatti.com.br/nossas-marcas/refrigerantes/soda-limonada-antarctica/soda-limonada-antarctica",
+    "credit": "Rizatti / Soda Limonada Antarctica",
+    "aliases": [],
+    "file": "drink-soda-ant-350.jpg"
+  },
+  {
+    "key": "sprite-2000",
+    "name": "Sprite Original 2 litros",
+    "category": "Refrigerantes 2 litros",
+    "image_url": "https://andinacocacola.vtexassets.com/arquivos/ids/158750-462-336?v=639240531304730000&width=462&height=336&aspect=true",
+    "source": "https://andina.nasuacasa.coca-cola.com.br/refrigerantes/sprite",
+    "credit": "Coca-Cola Brasil / Andina",
+    "aliases": [],
+    "file": "drink-sprite-2000.jpg"
+  },
+  {
+    "key": "sprite-350",
+    "name": "Sprite Original Lata 350 ml",
+    "category": "Refrigerantes Lata 350 ml",
+    "image_url": "https://www.coca-cola.com/content/dam/onexp/br/pt/brand-landing/sprite/SPRITE%20ORIGINAL%20234%20x%20700.png",
+    "source": "https://www.coca-cola.com/br/pt/brands/sprite/produtos",
+    "credit": "Coca-Cola Brasil / Andina",
+    "aliases": [],
+    "file": "drink-sprite-350.jpg"
+  },
+  {
+    "key": "sprite-zero-2000",
+    "name": "Sprite Zero Açúcar 2 litros",
+    "category": "Refrigerantes 2 litros",
+    "image_url": "https://andinacocacola.vtexassets.com/arquivos/ids/159429-462-336?v=639219628505000000&width=462&height=336&aspect=true",
+    "source": "https://andina.nasuacasa.coca-cola.com.br/refrigerantes/sprite",
+    "credit": "Coca-Cola Brasil / Andina",
+    "aliases": [],
+    "file": "drink-sprite-zero-2000.jpg"
+  },
+  {
+    "key": "sprite-zero-350",
+    "name": "Sprite Zero Açúcar Lata 350 ml",
+    "category": "Refrigerantes Lata 350 ml",
+    "image_url": "https://www.coca-cola.com/content/dam/onexp/br/pt/brand-landing/sprite/sprite%20sin%20azucar%20234%20x%20700.png",
+    "source": "https://www.coca-cola.com/br/pt/brands/sprite/produtos",
+    "credit": "Coca-Cola Brasil / Andina",
+    "aliases": [],
+    "file": "drink-sprite-zero-350.jpg"
+  },
+  {
+    "key": "sukita-laranja-1000",
+    "name": "Sukita Laranja 1 litro",
+    "category": "Refrigerantes 1 litro",
+    "image_url": "https://rizatti.com.br/uploads/produtos/resized-1.png",
+    "source": "https://rizatti.com.br/nossas-marcas/refrigerantes/sukita/sukita-laranja",
+    "credit": "Rizatti / Sukita Laranja",
+    "aliases": [],
+    "file": "drink-sukita-laranja-1000.jpg"
+  },
+  {
+    "key": "sukita-laranja-2000",
+    "name": "Sukita Laranja 2 litros",
+    "category": "Refrigerantes 2 litros",
+    "image_url": "https://rizatti.com.br/uploads/produtos/resized-0d78a12375dd2e15226899b4f914b5a5.png",
+    "source": "https://rizatti.com.br/nossas-marcas/refrigerantes/sukita/sukita-laranja",
+    "credit": "Rizatti / Sukita Laranja",
+    "aliases": [],
+    "file": "drink-sukita-laranja-2000.jpg"
+  },
+  {
+    "key": "sukita-laranja-600",
+    "name": "Sukita Laranja 600 ml",
+    "category": "Refrigerantes 600 ml",
+    "image_url": "https://rizatti.com.br/uploads/produtos/resized-6002.png",
+    "source": "https://rizatti.com.br/nossas-marcas/refrigerantes/sukita/sukita-laranja",
+    "credit": "Rizatti / Sukita Laranja",
+    "aliases": [],
+    "file": "drink-sukita-laranja-600.jpg"
+  },
+  {
+    "key": "sukita-laranja-350",
+    "name": "Sukita Laranja Lata 350 ml",
+    "category": "Refrigerantes Lata 350 ml",
+    "image_url": "https://rizatti.com.br/uploads/produtos/resized-350.png",
+    "source": "https://rizatti.com.br/nossas-marcas/refrigerantes/sukita/sukita-laranja",
+    "credit": "Rizatti / Sukita Laranja",
+    "aliases": [],
+    "file": "drink-sukita-laranja-350.jpg"
+  },
+  {
+    "key": "sukita-uva-2000",
+    "name": "Sukita Uva 2 litros",
+    "category": "Refrigerantes 2 litros",
+    "image_url": "https://rizatti.com.br/uploads/produtos/resized-1da295424c69e5353ba4edd67cccae701.png",
+    "source": "https://rizatti.com.br/nossas-marcas/refrigerantes/sukita/sukita-uva",
+    "credit": "Rizatti / Sukita Uva",
+    "aliases": [],
+    "file": "drink-sukita-uva-2000.jpg"
+  },
+  {
+    "key": "sukita-uva-350",
+    "name": "Sukita Uva Lata 350 ml",
+    "category": "Refrigerantes Lata 350 ml",
+    "image_url": "https://rizatti.com.br/uploads/produtos/resized-3502.png",
+    "source": "https://rizatti.com.br/nossas-marcas/refrigerantes/sukita/sukita-uva",
+    "credit": "Rizatti / Sukita Uva",
+    "aliases": [],
+    "file": "drink-sukita-uva-350.jpg"
+  },
+  {
+    "key": "tonica-ant-350",
+    "name": "Tônica Antarctica Lata 350 ml",
+    "category": "Refrigerantes Lata 350 ml",
+    "image_url": "https://rizatti.com.br/uploads/produtos/resized-fb395a6322418a0a32468d1f78383c3f2.png",
+    "source": "https://rizatti.com.br/nossas-marcas/refrigerantes/tonica-antarctica/tonica-antarctica",
+    "credit": "Rizatti / Tônica Antarctica",
+    "aliases": [],
+    "file": "drink-tonica-ant-350.jpg"
+  },
+  {
+    "key": "amstel-1000",
+    "name": "Amstel 1 litro",
+    "category": "Cervejas 1 litro",
+    "image_url": "https://www.amstelbrasil.com/media/k0il1mgb/amstel_garrafa_1l-1.png",
+    "source": "https://www.amstelbrasil.com/produtos/",
+    "credit": "Amstel Brasil",
+    "aliases": [
+      "amstel",
+      "amsrel"
+    ],
+    "file": "drink-amstel-1000.jpg"
+  },
+  {
+    "key": "amstel-600",
+    "name": "Amstel 600 ml",
+    "category": "Cervejas 600 ml",
+    "image_url": "https://www.amstelbrasil.com/media/peibbwhv/novo-projeto.png",
+    "source": "https://www.amstelbrasil.com/produtos/",
+    "credit": "Amstel Brasil",
+    "aliases": [
+      "amstel",
+      "amsrel"
+    ],
+    "file": "drink-amstel-600.jpg"
+  },
+  {
+    "key": "amstel-350",
+    "name": "Amstel Lata 350 ml",
+    "category": "Cervejas Lata 350 ml",
+    "image_url": "https://www.amstelbrasil.com/media/tzpk0cfp/amstel_lata_350ml.png",
+    "source": "https://www.amstelbrasil.com/produtos/",
+    "credit": "Amstel Brasil",
+    "aliases": [
+      "amstel",
+      "amsrel"
+    ],
+    "file": "drink-amstel-350.jpg"
+  },
+  {
+    "key": "antarctica-1000",
+    "name": "Antarctica Pilsen 1 litro",
+    "category": "Cervejas 1 litro",
+    "image_url": "https://rizatti.com.br/uploads/produtos/resized-1l14.png",
+    "source": "https://rizatti.com.br/nossas-marcas/cervejas/antarctica/antarctica-pilsen",
+    "credit": "Rizatti / Antarctica Pilsen",
+    "aliases": [
+      "antarctica",
+      "antarctica pilsen"
+    ],
+    "file": "drink-antarctica-1000.jpg"
+  },
+  {
+    "key": "antarctica-600",
+    "name": "Antarctica Pilsen 600 ml",
+    "category": "Cervejas 600 ml",
+    "image_url": "https://rizatti.com.br/uploads/produtos/resized-60018.png",
+    "source": "https://rizatti.com.br/nossas-marcas/cervejas/antarctica/antarctica-pilsen",
+    "credit": "Rizatti / Antarctica Pilsen",
+    "aliases": [
+      "antarctica",
+      "antarctica pilsen"
+    ],
+    "file": "drink-antarctica-600.jpg"
+  },
+  {
+    "key": "antarctica-350",
+    "name": "Antarctica Pilsen Lata 350 ml",
+    "category": "Cervejas Lata 350 ml",
+    "image_url": "https://rizatti.com.br/uploads/produtos/resized-35016.png",
+    "source": "https://rizatti.com.br/nossas-marcas/cervejas/antarctica/antarctica-pilsen",
+    "credit": "Rizatti / Antarctica Pilsen",
+    "aliases": [
+      "antarctica",
+      "antarctica pilsen"
+    ],
+    "file": "drink-antarctica-350.jpg"
+  },
+  {
+    "key": "bohemia-600",
+    "name": "Bohemia Puro Malte 600 ml",
+    "category": "Cervejas 600 ml",
+    "image_url": "https://rizatti.com.br/uploads/produtos/resized-bohemia_puro_malte_600ml-1.png",
+    "source": "https://rizatti.com.br/nossas-marcas/cervejas/bohemia-puro-malte/bohemia-puro-malte",
+    "credit": "Rizatti / Bohemia Puro Malte",
+    "aliases": [
+      "bohemia"
+    ],
+    "file": "drink-bohemia-600.jpg"
+  },
+  {
+    "key": "bohemia-350",
+    "name": "Bohemia Puro Malte Lata 350 ml",
+    "category": "Cervejas Lata 350 ml",
+    "image_url": "https://rizatti.com.br/uploads/produtos/resized-bohemia_puro_malte_350ml-1.png",
+    "source": "https://rizatti.com.br/nossas-marcas/cervejas/bohemia-puro-malte/bohemia-puro-malte",
+    "credit": "Rizatti / Bohemia Puro Malte",
+    "aliases": [
+      "bohemia"
+    ],
+    "file": "drink-bohemia-350.jpg"
+  },
+  {
+    "key": "brahma-1000",
+    "name": "Brahma Chopp 1 litro",
+    "category": "Cervejas 1 litro",
+    "image_url": "https://rizatti.com.br/uploads/produtos/resized-brahma_1l51.png",
+    "source": "https://rizatti.com.br/nossas-marcas/cervejas/brahma/brahma-chopp",
+    "credit": "Rizatti / Brahma Chopp",
+    "aliases": [
+      "brahma",
+      "brahma chopp"
+    ],
+    "file": "drink-brahma-1000.jpg"
+  },
+  {
+    "key": "brahma-600",
+    "name": "Brahma Chopp 600 ml",
+    "category": "Cervejas 600 ml",
+    "image_url": "https://rizatti.com.br/uploads/produtos/resized-brahma_600ml41.png",
+    "source": "https://rizatti.com.br/nossas-marcas/cervejas/brahma/brahma-chopp",
+    "credit": "Rizatti / Brahma Chopp",
+    "aliases": [
+      "brahma",
+      "brahma chopp"
+    ],
+    "file": "drink-brahma-600.jpg"
+  },
+  {
+    "key": "brahma-350",
+    "name": "Brahma Chopp Lata 350 ml",
+    "category": "Cervejas Lata 350 ml",
+    "image_url": "https://rizatti.com.br/uploads/produtos/resized-brahma_350ml.png",
+    "source": "https://rizatti.com.br/nossas-marcas/cervejas/brahma/brahma-chopp",
+    "credit": "Rizatti / Brahma Chopp",
+    "aliases": [
+      "brahma",
+      "brahma chopp"
+    ],
+    "file": "drink-brahma-350.jpg"
+  },
+  {
+    "key": "brahma-duplo-600",
+    "name": "Brahma Duplo Malte 600 ml",
+    "category": "Cervejas 600 ml",
+    "image_url": "https://rizatti.com.br/uploads/produtos/resized-brahma_brahma-duplo-malte_600ml.png",
+    "source": "https://rizatti.com.br/nossas-marcas/cervejas/brahma/brahma-duplo-malte",
+    "credit": "Rizatti / Brahma Duplo Malte",
+    "aliases": [],
+    "file": "drink-brahma-duplo-600.jpg"
+  },
+  {
+    "key": "brahma-duplo-350",
+    "name": "Brahma Duplo Malte Lata 350 ml",
+    "category": "Cervejas Lata 350 ml",
+    "image_url": "https://rizatti.com.br/uploads/produtos/resized-brahma_brahma-duplo-malte_350ml.png",
+    "source": "https://rizatti.com.br/nossas-marcas/cervejas/brahma/brahma-duplo-malte",
+    "credit": "Rizatti / Brahma Duplo Malte",
+    "aliases": [],
+    "file": "drink-brahma-duplo-350.jpg"
+  },
+  {
+    "key": "budweiser-350",
+    "name": "Budweiser Lata 350 ml",
+    "category": "Cervejas Lata 350 ml",
+    "image_url": "https://rizatti.com.br/uploads/produtos/resized-35010.png",
+    "source": "https://rizatti.com.br/nossas-marcas/cervejas/budweiser/budweiser",
+    "credit": "Rizatti / Budweiser",
+    "aliases": [],
+    "file": "drink-budweiser-350.jpg"
+  },
+  {
+    "key": "devassa-1000",
+    "name": "Devassa Tropical 1 litro",
+    "category": "Cervejas 1 litro",
+    "image_url": "https://cms.devassa.com.br/media/ws0jdvg1/garrafa-1l.png",
+    "source": "https://cms.devassa.com.br/produtos/devassa-garrafa/",
+    "credit": "Devassa Brasil",
+    "aliases": [
+      "devassa",
+      "devassa tropical"
+    ],
+    "file": "drink-devassa-1000.jpg"
+  },
+  {
+    "key": "devassa-600",
+    "name": "Devassa Tropical 600 ml",
+    "category": "Cervejas 600 ml",
+    "image_url": "https://cms.devassa.com.br/media/lfwgs2uj/garrafa-600ml.png",
+    "source": "https://cms.devassa.com.br/produtos/devassa-garrafa/",
+    "credit": "Devassa Brasil",
+    "aliases": [
+      "devassa",
+      "devassa tropical"
+    ],
+    "file": "drink-devassa-600.jpg"
+  },
+  {
+    "key": "devassa-350",
+    "name": "Devassa Tropical Lata 350 ml",
+    "category": "Cervejas Lata 350 ml",
+    "image_url": "https://cms.devassa.com.br/media/a4xnp1wt/lata-350ml.png",
+    "source": "https://cms.devassa.com.br/produtos/devassa-lata/",
+    "credit": "Devassa Brasil",
+    "aliases": [
+      "devassa",
+      "devassa tropical"
+    ],
+    "file": "drink-devassa-350.jpg"
+  },
+  {
+    "key": "heineken-600",
+    "name": "Heineken 600 ml",
+    "category": "Cervejas 600 ml",
+    "image_url": "https://www.imigrantesbebidas.com.br/img/bebida/images/products/full/223-cerveja-heineken-600ml-nao-retornavel.20250320105847.jpg?p=product_regular&s=864156eaccb0b86a5cfa4daf9ab007db",
+    "source": "https://www.imigrantesbebidas.com.br/cerveja-heineken-600ml-nao-retornavel",
+    "credit": "Imigrantes Bebidas / Heineken",
+    "aliases": [
+      "heineken"
+    ],
+    "file": "drink-heineken-600.jpg"
+  },
+  {
+    "key": "heineken-350",
+    "name": "Heineken Lata 350 ml",
+    "category": "Cervejas Lata 350 ml",
+    "image_url": "https://www.imigrantesbebidas.com.br/img/bebida/images/products/full/221-cerveja-heineken-lata-350-ml.20230928142110.jpg?p=product_regular&s=bd12c13601142bb13dc733f62b6cdc37",
+    "source": "https://www.imigrantesbebidas.com.br/cerveja-heineken-600ml-nao-retornavel",
+    "credit": "Imigrantes Bebidas / Heineken",
+    "aliases": [
+      "heineken"
+    ],
+    "file": "drink-heineken-350.jpg"
+  },
+  {
+    "key": "itaipava-1000",
+    "name": "Itaipava Pilsen 1 litro",
+    "category": "Cervejas 1 litro",
+    "image_url": "https://cervejaitaipava.com.br/wp-content/uploads/2023/10/ITAIPAVA_PILSEN_1LITRO.png",
+    "source": "https://cervejaitaipava.com.br/produto/pilsen/",
+    "credit": "Itaipava",
+    "aliases": [
+      "itaipava",
+      "itaipava pilsen"
+    ],
+    "file": "drink-itaipava-1000.jpg"
+  },
+  {
+    "key": "itaipava-600",
+    "name": "Itaipava Pilsen 600 ml",
+    "category": "Cervejas 600 ml",
+    "image_url": "https://cervejaitaipava.com.br/wp-content/uploads/2023/10/ITAIPAVA_PILSEN_600ml.png",
+    "source": "https://cervejaitaipava.com.br/produto/pilsen/",
+    "credit": "Itaipava",
+    "aliases": [
+      "itaipava",
+      "itaipava pilsen"
+    ],
+    "file": "drink-itaipava-600.jpg"
+  },
+  {
+    "key": "itaipava-350",
+    "name": "Itaipava Pilsen Lata 350 ml",
+    "category": "Cervejas Lata 350 ml",
+    "image_url": "https://cervejaitaipava.com.br/wp-content/uploads/2023/10/ITAIPAVA_PILSEN_LATA_350ml-1.png",
+    "source": "https://cervejaitaipava.com.br/produto/pilsen/",
+    "credit": "Itaipava",
+    "aliases": [
+      "itaipava",
+      "itaipava pilsen"
+    ],
+    "file": "drink-itaipava-350.jpg"
+  },
+  {
+    "key": "original-1000",
+    "name": "Original 1 litro",
+    "category": "Cervejas 1 litro",
+    "image_url": "https://phygital-files.mercafacil.com/comercial-bresciani/uploads/produto/cerv_original_1l_garrafa_2f09a36e-3dfa-4364-ac25-b9718f777520.jpg",
+    "source": "https://www.superbresciani.com.br/loja-1/produto/m/cervoriginal-1l-garrafa-12746",
+    "credit": "Supermercado Bresciani / Original",
+    "aliases": [
+      "original",
+      "antarctica original"
+    ],
+    "file": "drink-original-1000.jpg"
+  },
+  {
+    "key": "original-600",
+    "name": "Original 600 ml",
+    "category": "Cervejas 600 ml",
+    "image_url": "https://rizatti.com.br/uploads/produtos/resized-600ml.png",
+    "source": "https://rizatti.com.br/nossas-marcas/cervejas/original/antarctica-original",
+    "credit": "Rizatti / Original",
+    "aliases": [
+      "original",
+      "antarctica original"
+    ],
+    "file": "drink-original-600.jpg"
+  },
+  {
+    "key": "original-350",
+    "name": "Original Lata 350 ml",
+    "category": "Cervejas Lata 350 ml",
+    "image_url": "https://rizatti.com.br/uploads/produtos/resized-35011.png",
+    "source": "https://rizatti.com.br/nossas-marcas/cervejas/original/antarctica-original",
+    "credit": "Rizatti / Original",
+    "aliases": [
+      "original",
+      "antarctica original"
+    ],
+    "file": "drink-original-350.jpg"
+  },
+  {
+    "key": "skol-1000",
+    "name": "Skol Pilsen 1 litro",
+    "category": "Cervejas 1 litro",
+    "image_url": "https://rizatti.com.br/uploads/produtos/resized-skol_1l.png",
+    "source": "https://rizatti.com.br/nossas-marcas/cervejas/skol/skol-pilsen",
+    "credit": "Rizatti / Skol Pilsen",
+    "aliases": [
+      "skol",
+      "skol pilsen"
+    ],
+    "file": "drink-skol-1000.jpg"
+  },
+  {
+    "key": "skol-600",
+    "name": "Skol Pilsen 600 ml",
+    "category": "Cervejas 600 ml",
+    "image_url": "https://rizatti.com.br/uploads/produtos/resized-skol_600ml.png",
+    "source": "https://rizatti.com.br/nossas-marcas/cervejas/skol/skol-pilsen",
+    "credit": "Rizatti / Skol Pilsen",
+    "aliases": [
+      "skol",
+      "skol pilsen"
+    ],
+    "file": "drink-skol-600.jpg"
+  },
+  {
+    "key": "skol-350",
+    "name": "Skol Pilsen Lata 350 ml",
+    "category": "Cervejas Lata 350 ml",
+    "image_url": "https://rizatti.com.br/uploads/produtos/resized-skol_350ml.png",
+    "source": "https://rizatti.com.br/nossas-marcas/cervejas/skol/skol-pilsen",
+    "credit": "Rizatti / Skol Pilsen",
+    "aliases": [
+      "skol",
+      "skol pilsen"
+    ],
+    "file": "drink-skol-350.jpg"
+  },
+  {
+    "key": "skol-puro-600",
+    "name": "Skol Puro Malte 600 ml",
+    "category": "Cervejas 600 ml",
+    "image_url": "https://rizatti.com.br/uploads/produtos/resized-skol_puro_malte_600ml.png",
+    "source": "https://rizatti.com.br/nossas-marcas/cervejas/skol/skol-puro-malte",
+    "credit": "Rizatti / Skol Puro Malte",
+    "aliases": [],
+    "file": "drink-skol-puro-600.jpg"
+  },
+  {
+    "key": "skol-puro-350",
+    "name": "Skol Puro Malte Lata 350 ml",
+    "category": "Cervejas Lata 350 ml",
+    "image_url": "https://rizatti.com.br/uploads/produtos/resized-skol_puro_malte_350ml.png",
+    "source": "https://rizatti.com.br/nossas-marcas/cervejas/skol/skol-puro-malte",
+    "credit": "Rizatti / Skol Puro Malte",
+    "aliases": [],
+    "file": "drink-skol-puro-350.jpg"
+  }
+]

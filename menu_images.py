@@ -1,5 +1,6 @@
 """Curated menu photographs; no customer/bar data is sent to external image sites."""
 import re
+import starter_catalog
 import unicodedata
 
 CATALOG = {
@@ -34,7 +35,7 @@ def image_for(product):
         if brand in ('amstel','amsrel') and size=='600':key='amstel-600'
         elif brand in ('brahma','brahma chopp') and size in ('600','litro'):key='brahma-'+size
         elif brand in ('original','antarctica original') and size=='litro':key='original-litro'
-    if key is None:return None
+    if key is None:return starter_catalog.image_for(product)
     title,credit,source,license_url=CATALOG[key]
     return {'url':'/static/menu-'+key+'.jpg','alt':title,'credit':credit,'source':source,'license':license_url,'kind':'food' if key.startswith('batata') else 'bottle'}
 
