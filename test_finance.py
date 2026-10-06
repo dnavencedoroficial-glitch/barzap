@@ -96,6 +96,23 @@ class FinanceTests(unittest.TestCase):
         ids=[self.table['id'],second['id']]
         self.assertEqual(self.staffpost('tables/join',{'tables':ids,'sessions':{i:99 for i in ids}}).status_code,409)
         self.assertEqual(self.staffpost('tables/join',{'tables':[self.table['id'],'foreign'],'sessions':{}}).status_code,404)
+    def test_split_preserves_each_tables_orders_and_sessions(self):
+        self.order();self.staffpost('tables',{'name':'2'})
+        second=next(t for t in self.staff.get(self.endpoint('tables')).json['tables'] if t['name']=='2')
+        self.post(self.guest,'/api/public/'+second['token']+'/orders',self.payload(),self.guest_csrf)
+        tabs=self.staff.get(self.endpoint('tabs')).json['tabs'];sessions={t['table_id']:t['session'] for t in tabs}
+        ids=[self.table['id'],second['id']]
+        self.assertEqual(self.staffpost('tables/join',{'tables':ids,'sessions':sessions}).status_code,200)
+        self.assertEqual(self.staffpost('tables/'+self.table['id']+'/split',{'sessions':{i:99 for i in ids}}).status_code,409)
+        self.assertEqual(self.staffpost('tables/'+self.table['id']+'/split',{'sessions':sessions}).status_code,200)
+        separated=self.staff.get(self.endpoint('tabs')).json['tabs'];self.assertEqual(len(separated),2)
+        self.assertTrue(all(t['subtotal_cents']==1200 and t['session']==1 and len(t['orders'])==1 for t in separated))
+        self.assertEqual(self.staff.get(self.endpoint('reports')).json['receipts'],[])
+        self.assertEqual(self.staff.get(self.endpoint('cash')).json['cash']['received_cents'],0)
+        self.assertEqual(self.staffpost('tables/join',{'tables':ids,'sessions':sessions}).status_code,200)
+    def test_split_other_bar_denied(self):
+        result=self.post(self.staff,f'/api/bars/{self.bars[1]}/tables/{self.table["id"]}/split',{'sessions':{}},self.staff_csrf)
+        self.assertEqual(result.status_code,404)
 
 if __name__=='__main__':unittest.main()
 

@@ -203,6 +203,20 @@ def register_finance(app,access,require,data):
         if not t.opened:t.opened=True;t.session_no+=1;t.opened_at=stamp()
         g.db.commit();return jsonify(ok=True)
 
+    @app.post('/api/bars/<bar_id>/tables/<table_id>/split')
+    def split_tables(bar_id,table_id):
+        lock(bar_id);t=g.db.get(Table,table_id)
+        if not t or t.bar_id!=bar_id:abort(404)
+        members=joined_members(t);d=data();sessions=d.get('sessions')
+        if not isinstance(sessions,dict):abort(400)
+        list(g.db.scalars(select(Table).where(Table.id.in_([m.id for m in members])).with_for_update()))
+        if any(sessions.get(m.id)!=m.session_no for m in members):abort(409,description='Comandas alteradas. Atualize a tela antes de separar.')
+        if len(members)<2:abort(409,description='Estas mesas já estão separadas.')
+        for member in members:
+            membership=g.db.get(JoinedTable,member.id)
+            if membership:g.db.delete(membership)
+        g.db.commit();return jsonify(ok=True)
+
     @app.post('/api/bars/<bar_id>/tables/<table_id>/settle')
     def settle(bar_id,table_id):
         lock(bar_id);t=g.db.scalar(select(Table).where(Table.id==table_id).with_for_update())
