@@ -1,10 +1,11 @@
 import os,secrets,hmac,uuid,re,time
-from menu_images import product_data,FILES
+from menu_images import product_data,FILES,image_for
+from auto_images import find_photo,uploaded_photo
 from datetime import datetime,date,timedelta,timezone
 from decimal import Decimal,InvalidOperation
 from functools import wraps
 from zoneinfo import ZoneInfo
-from flask import Flask,request,session,jsonify,abort,g,send_from_directory
+from flask import Flask,request,session,jsonify,abort,g,send_from_directory,Response
 from werkzeug.security import generate_password_hash,check_password_hash
 from werkzeug.exceptions import HTTPException
 class SubscriptionRequired(HTTPException):
@@ -12,7 +13,7 @@ class SubscriptionRequired(HTTPException):
     description="Assinatura vencida."
 from sqlalchemy import create_engine,select,event,ForeignKey,UniqueConstraint
 from sqlalchemy.orm import DeclarativeBase,Mapped,mapped_column,Session
-from sqlalchemy import String,Integer,Boolean,Date,JSON
+from sqlalchemy import String,Integer,Boolean,Date,JSON,LargeBinary
 
 class Base(DeclarativeBase):pass
 class Bar(Base):
@@ -47,6 +48,13 @@ class Product(Base):
     name:Mapped[str]=mapped_column(String(100))
     price_cents:Mapped[int]=mapped_column(Integer)
     enabled:Mapped[bool]=mapped_column(Boolean,default=True)
+class ProductPhoto(Base):
+    __tablename__='product_photos'
+    product_id:Mapped[str]=mapped_column(ForeignKey('products.id'),primary_key=True)
+    token:Mapped[str]=mapped_column(String)
+    content:Mapped[bytes]=mapped_column(LargeBinary)
+    details:Mapped[dict]=mapped_column(JSON)
+
 class Order(Base):
     __tablename__='orders'
     __table_args__=(UniqueConstraint('bar_id','request_id'),)
@@ -87,7 +95,7 @@ def create_app(config=None):
     secret=os.environ.get('SECRET_KEY')
     if not secret and not config:raise RuntimeError('Configure SECRET_KEY com uma chave aleatória antes de iniciar.')
     if os.environ.get('APP_ENV')=='production' and (not secret or len(secret)<32 or not os.environ.get('DATABASE_URL')) and not config:raise RuntimeError('Produção exige SECRET_KEY forte e DATABASE_URL do PostgreSQL.')
-    app.config.update(SECRET_KEY=secret,SESSION_COOKIE_HTTPONLY=True,SESSION_COOKIE_SAMESITE='Lax',SESSION_COOKIE_SECURE=os.environ.get('APP_ENV')=='production',PERMANENT_SESSION_LIFETIME=timedelta(hours=12),MAX_CONTENT_LENGTH=64000)
+    app.config.update(SECRET_KEY=secret,SESSION_COOKIE_HTTPONLY=True,SESSION_COOKIE_SAMESITE='Lax',SESSION_COOKIE_SECURE=os.environ.get('APP_ENV')=='production',PERMANENT_SESSION_LIFETIME=timedelta(hours=12),MAX_CONTENT_LENGTH=3000000)
     if config:app.config.update(config)
     hosts=os.environ.get('TRUSTED_HOSTS','')
     if hosts:app.config['TRUSTED_HOSTS']=[host.strip() for host in hosts.split(',') if host.strip()]
@@ -138,6 +146,25 @@ def create_app(config=None):
         result=request.get_json(silent=True)
         if not isinstance(result,dict):abort(400)
         return result
+    def product_view(product):
+        result=product_data(product)
+        photo=g.db.get(ProductPhoto,product.id)
+        if photo:result['image']={**photo.details,'url':'/media/products/'+product.id+'/'+photo.token+'.jpg'}
+        return result
+    def save_photo(product,value=None):
+        if value:
+            try:content=uploaded_photo(value)
+            except ValueError as exc:abort(400,description=str(exc))
+            details={'alt':product.name,'credit':'Foto fornecida pelo bar','source':None,'license':None,'kind':'food','origin':'bar'}
+        elif image_for(product):return 'catalog'
+        else:
+            found=(app.config.get('IMAGE_LOOKUP') or find_photo)(product.name,product.category) if not app.config.get('TESTING') or app.config.get('IMAGE_LOOKUP') else None
+            if not found:return 'missing'
+            content,details=found
+        photo=g.db.get(ProductPhoto,product.id)
+        if not photo:photo=ProductPhoto(product_id=product.id);g.db.add(photo)
+        photo.token=secrets.token_urlsafe(24);photo.content=content;photo.details=details;g.db.commit()
+        return 'found'
     register_finance(app,access,require,data)
     @app.get('/')
     def home():return send_from_directory(app.root_path,'index.html')
@@ -179,10 +206,27 @@ def create_app(config=None):
         require(True);bar=access(bar_id,True);bar.start=max(today(),bar.due);bar.due=bar.start+timedelta(days=30);g.db.commit();return jsonify(bar=bar_data(bar))
     @app.get('/api/bars/<bar_id>/products')
     def products(bar_id):
-        access(bar_id);return jsonify(products=[product_data(p) for p in g.db.scalars(select(Product).where(Product.bar_id==bar_id,Product.enabled==True))])
+        access(bar_id);return jsonify(products=[product_view(p) for p in g.db.scalars(select(Product).where(Product.bar_id==bar_id,Product.enabled==True))])
     @app.post('/api/bars/<bar_id>/products')
     def new_product(bar_id):
-        access(bar_id);d=data();p=Product(id=str(uuid.uuid4()),bar_id=bar_id,category=text(d,'category',60),name=text(d,'name'),price_cents=cents(d.get('price')));g.db.add(p);g.db.commit();return jsonify(id=p.id),201
+        access(bar_id);d=data();p=Product(id=str(uuid.uuid4()),bar_id=bar_id,category=text(d,'category',60),name=text(d,'name'),price_cents=cents(d.get('price')));g.db.add(p)
+        # Validate an optional supplied photo before committing the product.
+        if d.get('photo'):
+            try:uploaded_photo(d['photo'])
+            except ValueError as exc:abort(400,description=str(exc))
+        g.db.commit();state=save_photo(p,d.get('photo'));return jsonify(id=p.id,image_state=state),201
+    @app.post('/api/bars/<bar_id>/products/<product_id>/image')
+    def replace_product_photo(bar_id,product_id):
+        access(bar_id);product=g.db.get(Product,product_id)
+        if not product or product.bar_id!=bar_id or not product.enabled:abort(404)
+        d=data();state=save_photo(product,d.get('photo'));return jsonify(image_state=state,product=product_view(product))
+    @app.get('/media/products/<product_id>/<photo_token>.jpg')
+    def stored_product_photo(product_id,photo_token):
+        photo=g.db.get(ProductPhoto,product_id);product=g.db.get(Product,product_id)
+        if not photo or not product or not product.enabled or not hmac.compare_digest(photo.token,photo_token):abort(404)
+        response=Response(photo.content,mimetype='image/jpeg')
+        response.headers['Cache-Control']='public, max-age=86400'
+        return response
     @app.delete('/api/bars/<bar_id>/products/<product_id>')
     def remove_product(bar_id,product_id):
         access(bar_id);p=g.db.get(Product,product_id)
@@ -215,7 +259,7 @@ def create_app(config=None):
         return t,bar
     @app.get('/api/public/<token>')
     def menu(token):
-        t,b=public_table(token);return jsonify(bar=b.name,table=t.name,open=t.opened and active_cash(b.id) is not None,session=t.session_no,waiter=(g.db.get(Waiter,g.db.get(Assignment,t.id).waiter_id).name if g.db.get(Assignment,t.id) else 'Sem garçom'),products=[product_data(p) for p in g.db.scalars(select(Product).where(Product.bar_id==b.id,Product.enabled==True))])
+        t,b=public_table(token);return jsonify(bar=b.name,table=t.name,open=t.opened and active_cash(b.id) is not None,session=t.session_no,waiter=(g.db.get(Waiter,g.db.get(Assignment,t.id).waiter_id).name if g.db.get(Assignment,t.id) else 'Sem garçom'),products=[product_view(p) for p in g.db.scalars(select(Product).where(Product.bar_id==b.id,Product.enabled==True))])
     @app.post('/api/public/<token>/orders')
     def order(token):
         t,b=public_table(token,True)
