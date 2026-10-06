@@ -26,3 +26,9 @@ A integração adiciona novas tabelas. Não remove ou renomeia as tabelas anteri
 20 testes locais verificaram autenticação, privacidade, isolamento, preços, tolerância, persistência, caixa, pagamentos divididos, taxa opcional, pendências, diferença de caixa, recibos, proteção contra fechamento duplicado e PDFs. Um fluxo local com dados fictícios foi verificado na tela. PDF de 50 mesas foi gerado com 9 páginas e inspecionado visualmente. A atualização financeira ainda precisa ser validada no PostgreSQL hospedado após publicação.
 
 Antes do uso comercial: implementar backups e migrações versionadas, recuperação de senha, cobrança de assinatura e revisão de segurança/carga. O controle de tentativas está na memória do worker. O banco gratuito do Render expira; sua capacidade e disponibilidade devem ser consideradas no uso definitivo.
+
+
+## Fotos do cardápio
+O catálogo revisado reconhece Amstel 600 ml (incluindo o cadastro amsrel confirmado pelo dono), Brahma 600 ml e 1 litro, Original 1 litro e os dois petiscos cadastrados. A associação usa nome e categoria e mantém preços, produtos e dados de cada bar. Outros produtos permanecem sem foto até serem revisados. As imagens são servidas localmente; o visitante não envia informações a sites externos para carregar fotos. Créditos e licenças ficam acessíveis no cardápio. Fotos dos petiscos são ilustrativas, redimensionadas, e podem ter enquadramento na tela.
+
+Batata frita: City Foodsters, Wikimedia Commons, CC BY 2.0. Batata com bacon e cheddar: Ser Amantio di Nicolao, Wikimedia Commons, CC BY-SA 3.0 (a imagem mantém esta licença). Cervejas: imagens de embalagem publicadas por Amstel Brasil, Rizatti/Brahma e Supermercado Bresciani/Original; marcas e imagens pertencem a seus respectivos titulares. Fontes completas no arquivo menu_images.py.

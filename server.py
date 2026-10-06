@@ -1,4 +1,5 @@
 import os,secrets,hmac,uuid,re,time
+from menu_images import product_data,FILES
 from datetime import datetime,date,timedelta,timezone
 from decimal import Decimal,InvalidOperation
 from functools import wraps
@@ -142,7 +143,7 @@ def create_app(config=None):
     def home():return send_from_directory(app.root_path,'index.html')
     @app.get('/static/<name>')
     def public_asset(name):
-        if name not in ('app.js','finance.js','style.css'):abort(404)
+        if name not in ('app.js','finance.js','style.css') and name not in FILES:abort(404)
         return send_from_directory(app.root_path,name)
     @app.get('/health')
     def health():return jsonify(status='ok')
@@ -178,7 +179,7 @@ def create_app(config=None):
         require(True);bar=access(bar_id,True);bar.start=max(today(),bar.due);bar.due=bar.start+timedelta(days=30);g.db.commit();return jsonify(bar=bar_data(bar))
     @app.get('/api/bars/<bar_id>/products')
     def products(bar_id):
-        access(bar_id);return jsonify(products=[{'id':p.id,'category':p.category,'name':p.name,'price_cents':p.price_cents} for p in g.db.scalars(select(Product).where(Product.bar_id==bar_id,Product.enabled==True))])
+        access(bar_id);return jsonify(products=[product_data(p) for p in g.db.scalars(select(Product).where(Product.bar_id==bar_id,Product.enabled==True))])
     @app.post('/api/bars/<bar_id>/products')
     def new_product(bar_id):
         access(bar_id);d=data();p=Product(id=str(uuid.uuid4()),bar_id=bar_id,category=text(d,'category',60),name=text(d,'name'),price_cents=cents(d.get('price')));g.db.add(p);g.db.commit();return jsonify(id=p.id),201
@@ -214,7 +215,7 @@ def create_app(config=None):
         return t,bar
     @app.get('/api/public/<token>')
     def menu(token):
-        t,b=public_table(token);return jsonify(bar=b.name,table=t.name,open=t.opened and active_cash(b.id) is not None,session=t.session_no,waiter=(g.db.get(Waiter,g.db.get(Assignment,t.id).waiter_id).name if g.db.get(Assignment,t.id) else 'Sem garçom'),products=[{'id':p.id,'name':p.name,'category':p.category,'price_cents':p.price_cents} for p in g.db.scalars(select(Product).where(Product.bar_id==b.id,Product.enabled==True))])
+        t,b=public_table(token);return jsonify(bar=b.name,table=t.name,open=t.opened and active_cash(b.id) is not None,session=t.session_no,waiter=(g.db.get(Waiter,g.db.get(Assignment,t.id).waiter_id).name if g.db.get(Assignment,t.id) else 'Sem garçom'),products=[product_data(p) for p in g.db.scalars(select(Product).where(Product.bar_id==b.id,Product.enabled==True))])
     @app.post('/api/public/<token>/orders')
     def order(token):
         t,b=public_table(token,True)
