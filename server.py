@@ -256,6 +256,18 @@ def create_app(config=None):
             try:uploaded_photo(d['photo'])
             except ValueError as exc:abort(400,description=str(exc))
         g.db.commit();state=save_photo(p,d.get('photo'));return jsonify(id=p.id,image_state=state),201
+    @app.patch('/api/bars/<bar_id>/products/<product_id>')
+    def edit_product(bar_id,product_id):
+        access(bar_id);product=g.db.get(Product,product_id)
+        if not product or product.bar_id!=bar_id or not product.enabled:abort(404)
+        d=data();name=text(d,'name');category=text(d,'category',60)
+        price=d.get('price')
+        if price in (None,''):
+            if product.price_cents>0:abort(400,description='Informe o preço do produto.')
+            value=0
+        else:value=cents(price)
+        product.name=name;product.category=category;product.price_cents=value;g.db.commit()
+        return jsonify(product=product_view(product))
     @app.post('/api/bars/<bar_id>/products/<product_id>/price')
     def product_price(bar_id,product_id):
         access(bar_id);product=g.db.get(Product,product_id)
