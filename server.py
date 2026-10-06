@@ -85,7 +85,13 @@ def seed_catalog(db,bar_id):
     existing=list(db.scalars(select(Product).where(Product.bar_id==bar_id)))
     imported=set(db.scalars(select(ProductPreset.preset_key).where(ProductPreset.bar_id==bar_id)))
     for preset in starter_catalog.CATALOG:
-        if preset['key'] in imported:continue
+        if preset['key'] in imported:
+            link=db.scalar(select(ProductPreset).where(ProductPreset.bar_id==bar_id,ProductPreset.preset_key==preset['key']))
+            seeded=db.get(Product,link.product_id)
+            match=next((p for p in existing if p.id!=seeded.id and p.price_cents>0 and starter_catalog.matches(p,preset)),None)
+            if seeded.enabled and seeded.price_cents==0 and match is not None:
+                seeded.enabled=False;link.product_id=match.id
+            continue
         product=next((p for p in existing if starter_catalog.matches(p,preset)),None)
         if product is None:
             product=Product(id=str(uuid.uuid4()),bar_id=bar_id,name=preset['name'],category=preset['category'],price_cents=0,enabled=True)

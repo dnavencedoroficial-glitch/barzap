@@ -9,7 +9,9 @@ def normalize(value):
 def matches(product,preset):
  name=normalize(product.name).removeprefix('cerveja ')
  if name==normalize(preset['name']):return True
- if name not in [normalize(a) for a in preset['aliases']]:return False
+ aliases=[normalize(a) for a in preset['aliases']]
+ aliases+= {'coca-350':['coca cola lata','coca cola original lata'],'coca-zero-350':['coca cola lata zero','coca cola lata zera','coca cola zero lata'],'guarana-ant-350':['guarana antartica lata','guarana antarctica lata']}.get(preset['key'],[])
+ if name not in aliases:return False
  value=normalize(product.name+' '+product.category)
  size='600' if re.search(r'\b600\s*ml\b',value) else '350' if 'lata' in value or re.search(r'\b350\s*ml\b',value) else '1000' if re.search(r'\b(?:litro|litrao|1\s*l)\b',value) else None
  return size==preset['key'].rsplit('-',1)[-1]

@@ -20,6 +20,16 @@ class StarterCatalog(unittest.TestCase):
    self.assertEqual(len(products),62);self.assertEqual(db.get(Product,'old-amstel').price_cents,1100)
    self.assertEqual(len(list(db.scalars(select(ProductPreset).where(ProductPreset.bar_id==bar)))),61)
    draft=next(p for p in products if p.price_cents==0);draft_id=draft.id;draft.enabled=False;db.commit();seed_catalog(db,bar);db.commit();self.assertFalse(db.get(Product,draft_id).enabled)
+ def test_existing_abbreviated_soft_drinks(self):
+  with Session(self.app.extensions['engine']) as db:
+   seed_catalog(db,self.bars[0]);db.commit()
+   for pid,name in [('coke','coca cola lata zera'),('guarana','guaraná antartica lata')]:
+    db.add(Product(id=pid,bar_id=self.bars[0],name=name,category='refrigerantes',price_cents=600,enabled=True))
+   db.commit();seed_catalog(db,self.bars[0]);db.commit()
+   for pid,key in [('coke','coca-zero-350'),('guarana','guarana-ant-350')]:
+    link=db.scalar(select(ProductPreset).where(ProductPreset.bar_id==self.bars[0],ProductPreset.preset_key==key))
+    self.assertEqual(link.product_id,pid);self.assertEqual(db.get(Product,pid).price_cents,600)
+   self.assertEqual(len(list(db.scalars(select(Product).where(Product.bar_id==self.bars[0],Product.enabled==True)))),62)
  def test_pending_price_isolation_and_activation(self):
   with Session(self.app.extensions['engine']) as db:
    seed_catalog(db,self.bars[0]);db.commit();draft=db.scalar(select(Product).where(Product.price_cents==0));pid=draft.id
