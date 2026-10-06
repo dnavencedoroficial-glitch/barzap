@@ -118,7 +118,7 @@ def cents(value):
 def subscription(bar):
     is_trial=bar.trial is not None
     block=bar.due if is_trial else bar.due+timedelta(days=5)
-    return {'start':bar.start.isoformat(),'due':bar.due.isoformat(),'block':block.isoformat(),'trial':is_trial,'notice':'Teste gratuito de somente 7 dias. Ao terminar, solicite a assinatura de R$ 29,90 por mês.' if is_trial else '', 'status':'Bloqueada' if today()>=block else 'Teste gratuito' if is_trial else 'Em tolerância' if today()>=bar.due else 'Ativa'}
+    return {'start':bar.start.isoformat(),'due':bar.due.isoformat(),'block':block.isoformat(),'trial':is_trial,'notice':'Teste gratuito de somente 7 dias. Ao terminar, solicite a assinatura de R$ 49,90 por mês.' if is_trial else '', 'status':'Bloqueada' if today()>=block else 'Teste gratuito' if is_trial else 'Em tolerância' if today()>=bar.due else 'Ativa'}
 def bar_data(bar):return {'id':bar.id,'name':bar.name,'release':bar.release,**subscription(bar)}
 
 def create_app(config=None):
