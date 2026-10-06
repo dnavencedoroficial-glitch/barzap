@@ -47,3 +47,7 @@ A aba Estoque permite definir contagem atual e registrar compras, com motivo, op
 ## Troco da comanda
 
 Recebimentos em dinheiro permitem valor entregue acima do saldo, com prévia do troco. Pix e cartões não podem exceder o total da conta. O servidor valida os totais e armazena valor entregue, troco e pagamento líquido no recibo. Em pagamentos divididos, o troco é abatido das linhas em dinheiro, da última para a primeira. O caixa soma apenas valores líquidos e informa o troco devolvido aos clientes. Recibos antigos permanecem compatíveis.
+
+## Acesso e senhas
+
+O cliente troca sua própria senha informando a senha atual, a nova e a confirmação. O administrador define a senha inicial ao liberar um bar e pode redefinir a senha de um usuário daquele bar em Acesso e senhas. Não há consulta de senha: somente hashes são armazenados. A tabela credential_versions invalida outras sessões após alteração ou redefinição; a sessão que troca sua própria senha continua válida. Novas senhas de troca/redefinição exigem 10 a 200 caracteres. PDF de controle contém apenas dados informados pelo proprietário e campos preenchíveis; não é incluído no código publicado nem no ZIP de instalação.

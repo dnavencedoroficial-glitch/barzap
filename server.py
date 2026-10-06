@@ -35,6 +35,11 @@ class User(Base):
     password_hash:Mapped[str]=mapped_column(String(300))
     role:Mapped[str]=mapped_column(String(20))
     bar_id:Mapped[str|None]=mapped_column(ForeignKey('bars.id'),nullable=True)
+class CredentialVersion(Base):
+    __tablename__='credential_versions'
+    user_id:Mapped[str]=mapped_column(ForeignKey('users.id'),primary_key=True)
+    version:Mapped[int]=mapped_column(Integer,default=0)
+
 class Table(Base):
     __tablename__='tables'
     __table_args__=(UniqueConstraint('bar_id','name'),)
@@ -155,6 +160,9 @@ def create_app(config=None):
     @app.before_request
     def before():
         g.db=Session(engine)
+        if session.get('user'):
+            version=g.db.get(CredentialVersion,session['user'])
+            if (version.version if version else 0)!=session.get('auth_version',0):session.clear()
         if request.method in ('POST','PUT','PATCH','DELETE'):
             value=request.headers.get('X-CSRF-Token','')
             if not value or not hmac.compare_digest(value,session.get('csrf','')):abort(403,description='Atualize a página antes de enviar.')
@@ -214,7 +222,7 @@ def create_app(config=None):
     def home():return send_from_directory(app.root_path,'index.html')
     @app.get('/static/<name>')
     def public_asset(name):
-        if name not in ('app.js','finance.js','inventory.js','style.css') and name not in FILES and name not in starter_catalog.STATIC_FILES:abort(404)
+        if name not in ('app.js','finance.js','inventory.js','accounts.js','style.css') and name not in FILES and name not in starter_catalog.STATIC_FILES:abort(404)
         return send_from_directory(app.root_path,name)
     @app.get('/health')
     def health():return jsonify(status='ok')
@@ -229,10 +237,35 @@ def create_app(config=None):
         if len(recent)>=10:abort(429,description='Aguarde alguns minutos para tentar novamente.')
         u=g.db.scalar(select(User).where(User.email==email))
         if not u or not check_password_hash(u.password_hash,password):attempts[key]=recent+[time.monotonic()];abort(401,description='E-mail ou senha incorretos.')
-        attempts.pop(key,None);session.clear();session.update(user=u.id,csrf=secrets.token_urlsafe(32));session.permanent=True
+        attempts.pop(key,None);session.clear();version=g.db.get(CredentialVersion,u.id);session.update(user=u.id,auth_version=version.version if version else 0,csrf=secrets.token_urlsafe(32));session.permanent=True
         return jsonify(csrf=session['csrf'],user={'email':u.email,'role':u.role,'bar_id':u.bar_id})
     @app.post('/api/logout')
     def logout():session.clear();return jsonify(ok=True)
+    def set_user_password(user,password):
+        if not isinstance(password,str) or not 10<=len(password)<=200:abort(400,description='A nova senha deve ter de 10 a 200 caracteres.')
+        version=g.db.scalar(select(CredentialVersion).where(CredentialVersion.user_id==user.id).with_for_update().execution_options(populate_existing=True))
+        if version is None:version=CredentialVersion(user_id=user.id,version=0);g.db.add(version)
+        user.password_hash=generate_password_hash(password);version.version+=1;g.db.commit()
+        return version.version
+    @app.post('/api/account/password')
+    def change_password():
+        user=require();d=data()
+        g.db.scalar(select(User).where(User.id==user.id).with_for_update().execution_options(populate_existing=True))
+        if not check_password_hash(user.password_hash,text(d,'current_password',200)):abort(400,description='Senha atual incorreta.')
+        if d.get('new_password')!=d.get('confirm_password'):abort(400,description='As novas senhas não coincidem.')
+        session['auth_version']=set_user_password(user,d.get('new_password'))
+        return jsonify(ok=True)
+    @app.get('/api/bars/<bar_id>/accounts')
+    def bar_accounts(bar_id):
+        require(True);access(bar_id,True)
+        return jsonify(accounts=[{'id':u.id,'login':u.email} for u in g.db.scalars(select(User).where(User.bar_id==bar_id,User.role=='bar'))])
+    @app.post('/api/bars/<bar_id>/accounts/<user_id>/password')
+    def reset_password(bar_id,user_id):
+        require(True);access(bar_id,True);d=data()
+        user=g.db.scalar(select(User).where(User.id==user_id).with_for_update().execution_options(populate_existing=True))
+        if not user or user.bar_id!=bar_id or user.role!='bar':abort(404)
+        if d.get('new_password')!=d.get('confirm_password'):abort(400,description='As novas senhas não coincidem.')
+        set_user_password(user,d.get('new_password'));return jsonify(ok=True)
     @app.get('/api/bars')
     def bars():
         u=require();q=select(Bar).order_by(Bar.release)
